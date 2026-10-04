@@ -1,0 +1,516 @@
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Basicos"
+
+cero ::= '0'
+digito ::= [0-9]
+digitoNoCero ::= [1-9]
+letra ::= [a-zA-Z]
+
+guionBajo ::= '_'
+signo ::= '-'
+
+punto ::= '.'
+coma ::= ','
+
+comillaSimple ::= "'"
+comillaDoble ::= '"'
+
+asignacion ::= 'Ͱ'
+delimitador ::= '»'
+
+parentesisAbre ::= 'є:'
+parentesisCierra ::= ':э'
+
+corcheteAbre ::= 'ʃ:'
+corcheteCierra ::= ':ʅ'
+
+arregloAbre ::= '¿:'
+arregloCierra ::= ':?'
+
+bloqueAbre ::= '¿:'
+bloqueCierra ::= ':?'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Identificadores"
+
+Identificador ::= letra
+Identificador ::= letra continuacionIdentificador
+Identificador ::= guionBajo continuacionIdentificador
+
+continuacionIdentificador ::= letra
+continuacionIdentificador ::= digito
+continuacionIdentificador ::= guionBajo
+continuacionIdentificador ::= letra continuacionIdentificador
+continuacionIdentificador ::= digito continuacionIdentificador
+continuacionIdentificador ::= guionBajo continuacionIdentificador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Definicion de tipos"
+
+tipoVariable ::= 'int' | 'float' | 'bool' | 'char' | 'string'
+
+tipoRetornoFuncion ::= 'int' | 'float' | 'char' | 'bool'
+
+tipoParametro ::= 'int' | 'float' | 'bool' | 'char' | 'string'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: int"
+
+int ::= cero
+int ::= intPositivo
+
+intPositivo ::= digitoNoCero
+intPositivo ::= digitoNoCero secuenciaDigitos
+
+secuenciaDigitos ::= digito
+secuenciaDigitos ::= digito secuenciaDigitos
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: float"
+
+float ::= int punto parteDecimal
+
+parteDecimal ::= digito
+parteDecimal ::= digito parteDecimal
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: char"
+
+char ::= comillaSimple caracterChar comillaSimple
+
+caracterChar ::= [^'\n]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: string"
+
+string ::= comillaDoble comillaDoble
+string ::= comillaDoble contenidoString comillaDoble
+
+contenidoString ::= caracterString
+contenidoString ::= caracterString contenidoString
+
+caracterString ::= [^"\n]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: bool"
+
+bool ::= 'true' | 'false'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: Arreglo"
+
+arreglo ::= arregloAbre listaElementosArreglo arregloCierra
+
+listaElementosArreglo ::= expresionNumerica
+listaElementosArreglo ::= expresionNumerica coma listaElementosArreglo
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Tipo: Literal"
+
+literalInt ::= int
+literalFloat ::= float
+literalString ::= string
+literalChar ::= char
+literalBool ::= bool
+
+literal ::= literalInt
+literal ::= literalFloat
+literal ::= literalString
+literal ::= literalChar
+literal ::= literalBool
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Funciones"
+
+funcion ::= tipoRetornoFuncion Identificador parentesisAbre parentesisCierra bloqueAbre bloqueFuncion bloqueCierra
+funcion ::= tipoRetornoFuncion Identificador parentesisAbre listaParametros parentesisCierra bloqueAbre bloqueFuncion bloqueCierra
+
+parametro ::= tipoParametro Identificador
+
+listaParametros ::= parametro
+listaParametros ::= parametro coma listaParametros
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Bloque de Funcion"
+
+bloqueFuncion ::= elementoFuncion
+bloqueFuncion ::= elementoFuncion bloqueFuncion
+
+elementoFuncion ::= sentencia
+elementoFuncion ::= estrucControl
+elementoFuncion ::= return
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Invocacion de funciones"
+
+invocarFuncion ::= Identificador parentesisAbre parentesisCierra
+invocarFuncion ::= Identificador parentesisAbre listaArgumentos parentesisCierra
+
+listaArgumentos ::= argumento
+listaArgumentos ::= argumento coma listaArgumentos
+
+argumento ::= expresion
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Programa Principal"
+
+inicio ::= programa
+
+programa ::= principal
+programa ::= listaGlobal principal
+
+listaGlobal ::= elementoGlobal
+listaGlobal ::= elementoGlobal listaGlobal
+
+elementoGlobal ::= declaracionVarGlobal
+elementoGlobal ::= funcion
+
+principal ::= 'void' 'main' parentesisAbre parentesisCierra bloqueAbre bloqueCod bloqueCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Bloques de codigo"
+
+bloqueCod ::= elementoBloque
+bloqueCod ::= elementoBloque bloqueCod
+
+elementoBloque ::= sentencia
+elementoBloque ::= estrucControl
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Variables Globales"
+
+declaracionVarGlobal ::= crearVariable delimitador
+declaracionVarGlobal ::= crearAsignarVariable delimitador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Crear Variables"
+
+crearVariable ::= 'val' tipoVariable Identificador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Crear y asignar variables"
+
+crearAsignarVariable ::= crearVariable asignacion valorAsignable
+
+valorAsignable ::= expresion
+valorAsignable ::= arreglo
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Asignar Variables"
+
+asignarVariable ::= Identificador asignacion valorAsignable
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Return"
+
+return ::= 'return' expresion delimitador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Sentencias"
+
+sentencia ::= crearVariable delimitador
+sentencia ::= crearAsignarVariable delimitador
+sentencia ::= asignarVariable delimitador
+sentencia ::= asignarElementoArreglo delimitador
+sentencia ::= entradaEst delimitador
+sentencia ::= salidaEst delimitador
+sentencia ::= expresion delimitador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Sentencia: Escribir en salida"
+
+salidaEst ::= 'write' parentesisAbre datoSalida parentesisCierra
+
+datoSalida ::= literalString
+datoSalida ::= literalInt
+datoSalida ::= literalBool
+datoSalida ::= literalFloat
+datoSalida ::= Identificador
+datoSalida ::= arreglo
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Sentencia: Recibir en entrada"
+
+entradaEst ::= 'read' parentesisAbre Identificador parentesisCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Sentencias de Arreglos"
+
+obtenerDatoArreglo ::= Identificador corcheteAbre expresionNumerica corcheteCierra
+
+asignarElementoArreglo ::= obtenerDatoArreglo asignacion expresionNumerica
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Estructuras de Control"
+
+estrucControl ::= if
+estrucControl ::= while
+estrucControl ::= for
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Condiciones"
+
+condicion ::= expresionBool
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"If - Elif - Else"
+
+if ::= 'if' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra
+
+if ::= 'if' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra listaElif
+
+if ::= 'if' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra else
+
+if ::= 'if' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra listaElif else
+
+
+listaElif ::= elif
+listaElif ::= elif listaElif
+
+
+elif ::= 'elif' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra
+
+
+else ::= 'else' bloqueAbre bloqueControl bloqueCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"While"
+
+while ::= 'while' parentesisAbre condicion parentesisCierra bloqueAbre bloqueControl bloqueCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"For"
+
+for ::= 'for' parentesisAbre inicializacionFor coma condicion coma actualizacionFor parentesisCierra bloqueAbre bloqueControl bloqueCierra
+
+inicializacionFor ::= crearAsignarVariable
+inicializacionFor ::= asignarVariable
+inicializacionFor ::= Identificador
+
+actualizacionFor ::= expresionNumerica
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Bloques de codigo en estructuras de control"
+
+bloqueControl ::= elementoControl
+bloqueControl ::= elementoControl bloqueControl
+
+elementoControl ::= sentencia
+elementoControl ::= estrucControl
+elementoControl ::= return
+elementoControl ::= break
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Break"
+
+break ::= 'break' delimitador
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones"
+
+expresion ::= expresionNumerica
+expresion ::= expresionBool
+expresion ::= expresionChar
+expresion ::= expresionString
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones Numericas"
+
+expresionNumerica ::= expresionModulo
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Modulo"
+
+expresionModulo ::= expresionMultiplicativa
+expresionModulo ::= expresionModulo operadorModulo expresionMultiplicativa
+
+operadorModulo ::= '%'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Multiplicacion y Division"
+
+expresionMultiplicativa ::= expresionSuma
+expresionMultiplicativa ::= expresionMultiplicativa operadorMultiplicativo expresionSuma
+
+operadorMultiplicativo ::= '*' | '/' | '//'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Suma y Resta"
+
+expresionSuma ::= expresionPotencia
+expresionSuma ::= expresionSuma operadorSuma expresionPotencia
+
+operadorSuma ::= '+' | '-'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Potencia"
+
+expresionPotencia ::= operandoNumerico
+expresionPotencia ::= operandoNumerico operadorPotencia potenciaPositiva
+
+operadorPotencia ::= '^'
+
+potenciaPositiva ::= digitoNoCero
+potenciaPositiva ::= digitoNoCero secuenciaDigitos
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Operandos Numericos"
+
+operandoNumerico ::= literalInt
+operandoNumerico ::= literalFloat
+operandoNumerico ::= Identificador
+operandoNumerico ::= invocarFuncion
+operandoNumerico ::= obtenerDatoArreglo
+operandoNumerico ::= expresionUnaria
+operandoNumerico ::= parentesisAbre expresionNumerica parentesisCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones Unarias"
+
+expresionUnaria ::= expresionNegativa
+expresionUnaria ::= expresionPostfija
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Negativo"
+
+expresionNegativa ::= signo literalInt
+expresionNegativa ::= signo literalFloat
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Incremento y Decremento"
+
+expresionPostfija ::= Identificador operadorPostfijo
+
+operadorPostfijo ::= '++' | '--'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones Relacionales"
+
+expresionRelacional ::= expresionRelacionOrden
+expresionRelacional ::= expresionComparacionNumerica
+expresionRelacional ::= expresionComparacionBool
+expresionRelacional ::= expresionComparacionChar
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Relaciones Numericas"
+
+expresionRelacionOrden ::= corcheteAbre expresionNumerica corcheteCierra operadorRelacional corcheteAbre expresionNumerica corcheteCierra
+
+operadorRelacional ::= '<' | '<=' | '>' | '>='
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Comparacion Numerica"
+
+expresionComparacionNumerica ::= corcheteAbre expresionNumerica corcheteCierra operadorComparacion corcheteAbre expresionNumerica corcheteCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Comparacion Boolean"
+
+expresionComparacionBool ::= corcheteAbre expresionBool corcheteCierra operadorComparacion corcheteAbre expresionBool corcheteCierra
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Comparacion Char"
+
+expresionComparacionChar ::= corcheteAbre expresionChar corcheteCierra operadorComparacion corcheteAbre expresionChar corcheteCierra
+
+operadorComparacion ::= '==' | '!='
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones Booleanas"
+
+expresionBool ::= operandoBool
+expresionBool ::= expresionRelacional
+expresionBool ::= expresionConjuncion
+expresionBool ::= expresionDisyuncion
+expresionBool ::= expresionNegacion
+
+
+operandoBool ::= literalBool
+operandoBool ::= Identificador
+operandoBool ::= invocarFuncion
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Conjuncion"
+
+expresionConjuncion ::= parentesisAbre expresionBool parentesisCierra operadorConjuncion parentesisAbre expresionBool parentesisCierra
+
+operadorConjuncion ::= 'λ'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Disyuncion"
+
+expresionDisyuncion ::= parentesisAbre expresionBool parentesisCierra operadorDisyuncion parentesisAbre expresionBool parentesisCierra
+
+operadorDisyuncion ::= 'θ'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresion: Negacion"
+
+expresionNegacion ::= operadorNegacion parentesisAbre expresionBool parentesisCierra
+
+operadorNegacion ::= 'Σ'
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones Char"
+
+expresionChar ::= literalChar
+expresionChar ::= Identificador
+expresionChar ::= invocarFuncion
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+"Expresiones String"
+
+expresionString ::= literalString
+expresionString ::= Identificador

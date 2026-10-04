@@ -1,0 +1,31 @@
+val float precio Ͱ 5.1  »
+
+void main є: :э ¿:
+
+    val int a Ͱ 10 + * 5»
+
+    val int b Ͱ 20»
+
+    val int numeros Ͱ ¿: 1, 2, 3 :? »
+
+    val int x Ͱ numeros ʃ: + 1 :ʅ»
+
+    val int y Ͱ 30»
+
+    if є: 10 + * 2 :э ¿:
+        val int z Ͱ 40»
+    :?
+
+    val int w Ͱ 50»
+
+    for є: i Ͱ 0, true, + 1 :э ¿:
+        break»
+    :?
+
+    val int k Ͱ 60»
+
+    calcular ( 10, , 20 :э »
+
+    val int final Ͱ 70»
+
+:?

@@ -1,0 +1,1392 @@
+package compiler;
+
+import java_cup.runtime.Symbol;
+import java.util.List;
+
+parser code {:
+    public java.util.List<ErrorCompilador> errores = new java.util.ArrayList<>();
+
+        private String nombreToken(int id) {
+            for (java.lang.reflect.Field f : sym.class.getFields()) {
+                try {
+                    if (f.getType() == int.class && f.getInt(null) == id) {
+                        return f.getName();
+                    }
+                } catch (IllegalAccessException e) { }
+            }
+            return "?" + id;
+        }
+
+        private String esperados() {
+            java.util.List<String> nombres = new java.util.ArrayList<>();
+            for (int id : expected_token_ids()) {
+                nombres.add(nombreToken(id));
+            }
+            return String.join(", ", nombres);
+        }
+
+        @Override
+        public void syntax_error(Symbol cur) {
+            boolean eof = (cur.sym == sym.EOF);
+            String desc = eof ? "Fin de archivo inesperado" : "Token inesperado";
+
+            String esp = esperados();
+            if (!esp.isEmpty()) {
+                desc += ". Se esperaba: " + esp;
+            }
+
+            errores.add(new ErrorCompilador(
+                "Sintáctico",
+                eof ? "EOF" : String.valueOf(cur.value),
+                desc,
+                cur.left,
+                cur.right));
+        }
+
+    @Override
+    public void unrecovered_syntax_error(Symbol cur) throws Exception {
+        errores.add(new ErrorCompilador(
+            "Sintáctico",
+            String.valueOf(cur.value),
+            "No fue posible recuperarse del error",
+            cur.left,
+            cur.right));
+    }
+:}
+
+
+/* ------------  Terminales  ---------------- */
+
+
+terminal VOID;
+terminal MAIN;
+
+terminal VAL;
+
+
+terminal INT;
+terminal FLOAT;
+terminal BOOL;
+terminal CHAR;
+terminal STRING;
+
+terminal TRUE;
+terminal FALSE;
+
+terminal IDENTIFICADOR;
+
+terminal CERO;
+terminal ENTERO_POSITIVO;
+terminal LITERAL_FLOAT;
+
+
+terminal LITERAL_CHAR;
+terminal LITERAL_STRING;
+
+terminal WRITE;
+terminal READ;
+terminal RETURN;
+
+terminal IF;
+terminal ELIF;
+terminal ELSE;
+terminal WHILE;
+terminal FOR;
+terminal BREAK;
+
+terminal PARENTESIS_ABRE;
+terminal PARENTESIS_CIERRA;
+
+terminal BLOQUE_ABRE;
+terminal BLOQUE_CIERRA;
+
+terminal CORCHETE_ABRE;
+terminal CORCHETE_CIERRA;
+
+terminal ASIGNACION;
+terminal DELIMITADOR;
+terminal COMA;
+
+terminal MAS;
+terminal MENOS;
+
+terminal MULTIPLICACION;
+terminal DIVISION;
+terminal DIVISION_ENTERA;
+
+terminal MODULO;
+terminal POTENCIA;
+
+terminal INCREMENTO;
+terminal DECREMENTO;
+
+terminal MENOR;
+terminal MENOR_IGUAL;
+
+terminal MAYOR;
+terminal MAYOR_IGUAL;
+
+terminal IGUAL;
+terminal DIFERENTE;
+
+terminal CONJUNCION;
+terminal DISYUNCION;
+terminal NEGACION;
+
+
+/* ------------  No Terminales  ---------------- */
+
+non terminal inicio;
+non terminal programa;
+non terminal principal;
+
+non terminal listaGlobal;
+non terminal elementoGlobal;
+non terminal declaracionVarGlobal;
+
+non terminal funcion;
+
+non terminal tipoRetornoFuncion;
+non terminal tipoParametro;
+
+non terminal parametro;
+non terminal listaParametros;
+
+non terminal bloqueFuncion;
+non terminal elementoFuncion;
+
+non terminal retorno;
+
+non terminal invocarFuncion;
+non terminal listaArgumentos;
+non terminal argumento;
+
+non terminal referenciaContextual;
+
+non terminal bloqueCod;
+non terminal elementoBloque;
+
+non terminal sentencia;
+
+non terminal crearVariable;
+non terminal crearAsignarVariable;
+non terminal asignarVariable;
+
+non terminal tipoVariable;
+non terminal valorAsignable;
+
+non terminal entradaEst;
+non terminal salidaEst;
+non terminal datoSalida;
+
+non terminal arreglo;
+non terminal listaElementosArreglo;
+
+non terminal obtenerDatoArreglo;
+non terminal asignarElementoArreglo;
+
+non terminal estrucControl;
+non terminal condicion;
+
+non terminal estructuraIf;
+non terminal listaElif;
+non terminal estructuraElif;
+non terminal estructuraElse;
+
+non terminal estructuraWhile;
+
+non terminal estructuraFor;
+non terminal inicializacionFor;
+non terminal actualizacionFor;
+
+non terminal bloqueControl;
+non terminal elementoControl;
+
+non terminal sentenciaBreak;
+
+non terminal expresion;
+
+non terminal expresionNumerica;
+non terminal expresionNumericaNoIdent;
+
+non terminal expresionModulo;
+non terminal expresionModuloNoIdent;
+
+non terminal expresionMultiplicativa;
+non terminal expresionMultiplicativaNoIdent;
+
+non terminal expresionSuma;
+non terminal expresionSumaNoIdent;
+
+non terminal expresionPotencia;
+non terminal expresionPotenciaNoIdent;
+
+non terminal operandoNumerico;
+non terminal operandoNumericoNoIdent;
+
+non terminal grupoReferencia;
+non terminal grupoNumerico;
+
+non terminal operadorModulo;
+non terminal operadorMultiplicativo;
+non terminal operadorSuma;
+non terminal operadorPotencia;
+
+non terminal potenciaPositiva;
+
+non terminal expresionUnaria;
+non terminal expresionNegativa;
+non terminal expresionPostfija;
+non terminal operadorPostfijo;
+
+non terminal expresionRelacional;
+
+non terminal expresionRelacionNumerica;
+non terminal continuacionRelacionNumerica;
+
+non terminal expresionComparacionBool;
+non terminal expresionComparacionChar;
+
+non terminal operandoIgualdad;
+
+non terminal operadorOrden;
+non terminal operadorComparacion;
+
+non terminal expresionBool;
+non terminal literalBool;
+
+non terminal grupoBooleano;
+non terminal grupoLogico;
+
+non terminal expresionConjuncion;
+non terminal expresionDisyuncion;
+non terminal expresionNegacion;
+
+non terminal expresionChar;
+non terminal expresionString;
+
+non terminal literalInt;
+non terminal literalFloat;
+non terminal literalChar;
+non terminal literalString;
+
+
+/* ------------  Simbolo Inicial  ---------------- */
+
+start with inicio;
+
+
+/* ------------  Inicio  ---------------- */
+
+inicio ::=
+    programa
+;
+
+
+/* ------------  Programa  ---------------- */
+
+programa ::=
+    principal
+;
+
+programa ::=
+    listaGlobal
+    principal
+;
+
+
+/* ------------  Lista Global  ---------------- */
+
+listaGlobal ::=
+    elementoGlobal
+;
+
+listaGlobal ::=
+    elementoGlobal
+    listaGlobal
+;
+
+
+/* ------------  ElementoGlobal  ---------------- */
+
+elementoGlobal ::=
+    declaracionVarGlobal
+;
+
+elementoGlobal ::=
+    funcion
+;
+
+
+
+/* ------------  VarGlobal  ---------------- */
+
+declaracionVarGlobal ::=
+    crearVariable
+    DELIMITADOR
+;
+
+declaracionVarGlobal ::=
+    crearAsignarVariable
+    DELIMITADOR
+;
+
+
+/* ------------  Funcion  ---------------- */
+
+funcion ::=
+    tipoRetornoFuncion
+    IDENTIFICADOR
+    PARENTESIS_ABRE
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueFuncion
+    BLOQUE_CIERRA
+;
+
+funcion ::=
+    tipoRetornoFuncion
+    IDENTIFICADOR
+    PARENTESIS_ABRE
+    listaParametros
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueFuncion
+    BLOQUE_CIERRA
+;
+
+
+/* ------------  TipoRetorno  ---------------- */
+
+tipoRetornoFuncion ::=
+    INT
+;
+
+tipoRetornoFuncion ::=
+    FLOAT
+;
+
+tipoRetornoFuncion ::=
+    CHAR
+;
+
+tipoRetornoFuncion ::=
+    BOOL
+;
+
+
+/* ------------  Tipo Parametros  ---------------- */
+
+tipoParametro ::=
+    INT
+;
+
+tipoParametro ::=
+    FLOAT
+;
+
+tipoParametro ::=
+    BOOL
+;
+
+tipoParametro ::=
+    CHAR
+;
+
+tipoParametro ::=
+    STRING
+;
+
+
+/* ------------  Parametros  ---------------- */
+
+parametro ::=
+    tipoParametro
+    IDENTIFICADOR
+;
+
+
+listaParametros ::=
+    parametro
+;
+
+listaParametros ::=
+    parametro
+    COMA
+    listaParametros
+;
+
+
+/* ------------  BlqueFunc  ---------------- */
+
+bloqueFuncion ::=
+    elementoFuncion
+;
+
+bloqueFuncion ::=
+    elementoFuncion
+    bloqueFuncion
+;
+
+elementoFuncion ::=
+    sentencia
+;
+
+elementoFuncion ::=
+    estrucControl
+;
+
+elementoFuncion ::=
+    retorno
+;
+
+
+/* ------------  Return  ---------------- */
+
+retorno ::=
+    RETURN
+    expresion
+    DELIMITADOR
+;
+
+
+/* ------------  InvocarFunc  ---------------- */
+
+invocarFuncion ::=
+    IDENTIFICADOR
+    PARENTESIS_ABRE
+    PARENTESIS_CIERRA
+;
+
+invocarFuncion ::=
+    IDENTIFICADOR
+    PARENTESIS_ABRE
+    listaArgumentos
+    PARENTESIS_CIERRA
+;
+
+
+/* ------------  Argumentos  ---------------- */
+
+listaArgumentos ::=
+    argumento
+;
+
+listaArgumentos ::=
+    argumento
+    COMA
+    listaArgumentos
+;
+
+
+argumento ::=
+    expresion
+;
+
+
+/* ------------  ReferenciaContextual ( Hice esto para evitar problemas de ambiguiedad, relevo trabajo al semantico)  ---------------- */
+
+referenciaContextual ::=
+    IDENTIFICADOR
+;
+
+referenciaContextual ::=
+    invocarFuncion
+;
+
+
+/* ------------  Main (Principal)  ---------------- */
+
+principal ::=
+    VOID
+    MAIN
+    PARENTESIS_ABRE
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueCod
+    BLOQUE_CIERRA
+;
+
+
+/* ------------  BloqueCod  ---------------- */
+
+bloqueCod ::=
+    elementoBloque
+;
+
+bloqueCod ::=
+    elementoBloque
+    bloqueCod
+;
+
+
+elementoBloque ::=
+    sentencia
+;
+
+elementoBloque ::=
+    estrucControl
+;
+
+
+/* ------------  Sentencia  ---------------- */
+
+sentencia ::=
+    crearVariable
+    DELIMITADOR
+;
+
+sentencia ::=
+    crearAsignarVariable
+    DELIMITADOR
+;
+
+sentencia ::=
+    asignarVariable
+    DELIMITADOR
+;
+
+sentencia ::=
+    asignarElementoArreglo
+    DELIMITADOR
+;
+
+sentencia ::=
+    entradaEst
+    DELIMITADOR
+;
+
+sentencia ::=
+    salidaEst
+    DELIMITADOR
+;
+
+sentencia ::=
+    expresion
+    DELIMITADOR
+;
+
+/* ------------  CrearVariable  ---------------- */
+
+crearVariable ::=
+    VAL
+    tipoVariable
+    IDENTIFICADOR
+;
+
+
+/* ------------  tipo Variable  ---------------- */
+
+tipoVariable ::=
+    INT
+;
+
+tipoVariable ::=
+    FLOAT
+;
+
+tipoVariable ::=
+    BOOL
+;
+
+tipoVariable ::=
+    CHAR
+;
+
+tipoVariable ::=
+    STRING
+;
+
+
+/* ------------  crearAsignarVariable  ---------------- */
+
+crearAsignarVariable ::=
+    crearVariable
+    ASIGNACION
+    valorAsignable
+;
+
+
+/* ------------  AsignacionVariable  ---------------- */
+
+asignarVariable ::=
+    IDENTIFICADOR
+    ASIGNACION
+    valorAsignable
+;
+
+
+/* ------------  valorAsignable  ---------------- */
+
+valorAsignable ::=
+    expresion
+;
+
+valorAsignable ::=
+    arreglo
+;
+
+
+/* ------------  Arreglos  ---------------- */
+
+arreglo ::=
+    BLOQUE_ABRE
+    listaElementosArreglo
+    BLOQUE_CIERRA
+;
+
+
+listaElementosArreglo ::=
+    expresionNumerica
+;
+
+listaElementosArreglo ::=
+    expresionNumerica
+    COMA
+    listaElementosArreglo
+;
+
+obtenerDatoArreglo ::=
+    IDENTIFICADOR
+    CORCHETE_ABRE
+    expresionNumerica
+    CORCHETE_CIERRA
+;
+
+asignarElementoArreglo ::=
+    obtenerDatoArreglo
+    ASIGNACION
+    expresionNumerica
+;
+
+
+/* ------------  Read  ---------------- */
+
+entradaEst ::=
+    READ
+    PARENTESIS_ABRE
+    IDENTIFICADOR
+    PARENTESIS_CIERRA
+;
+
+
+/* ------------  Write  ---------------- */
+
+salidaEst ::=
+    WRITE
+    PARENTESIS_ABRE
+    datoSalida
+    PARENTESIS_CIERRA
+;
+
+datoSalida ::=
+    literalString
+;
+
+datoSalida ::=
+    literalInt
+;
+
+datoSalida ::=
+    literalBool
+;
+
+datoSalida ::=
+    literalFloat
+;
+
+datoSalida ::=
+    IDENTIFICADOR
+;
+
+
+/* ------------   Estructura Control  ---------------- */
+
+estrucControl ::=
+    estructuraIf
+;
+
+estrucControl ::=
+    estructuraWhile
+;
+
+estrucControl ::=
+    estructuraFor
+;
+
+
+/* ------------  Condicion  ---------------- */
+
+condicion ::=
+    expresionBool
+;
+
+condicion ::=
+    referenciaContextual
+;
+
+/* ------------  IF  ---------------- */
+
+estructuraIf ::=
+    IF
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+;
+
+estructuraIf ::=
+    IF
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+    listaElif
+;
+
+estructuraIf ::=
+    IF
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+    estructuraElse
+;
+
+
+/* if + elif + else */
+
+estructuraIf ::=
+    IF
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+    listaElif
+    estructuraElse
+;
+
+listaElif ::=
+    estructuraElif
+;
+
+listaElif ::=
+    estructuraElif
+    listaElif
+;
+
+
+estructuraElif ::=
+    ELIF
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+;
+
+estructuraElse ::=
+    ELSE
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+;
+
+
+/* ------------  While  ---------------- */
+
+estructuraWhile ::=
+    WHILE
+    PARENTESIS_ABRE
+    condicion
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+;
+
+
+/* ------------  For  ---------------- */
+
+estructuraFor ::=
+    FOR
+    PARENTESIS_ABRE
+    inicializacionFor
+    COMA
+    condicion
+    COMA
+    actualizacionFor
+    PARENTESIS_CIERRA
+    BLOQUE_ABRE
+    bloqueControl
+    BLOQUE_CIERRA
+;
+
+inicializacionFor ::=
+    crearAsignarVariable
+;
+
+inicializacionFor ::=
+    asignarVariable
+;
+
+inicializacionFor ::=
+    IDENTIFICADOR
+;
+
+actualizacionFor ::=
+    expresionNumerica
+;
+
+
+/* ------------  Bloque Control  ---------------- */
+
+bloqueControl ::=
+    elementoControl
+;
+
+bloqueControl ::=
+    elementoControl
+    bloqueControl
+;
+
+
+elementoControl ::=
+    sentencia
+;
+
+elementoControl ::=
+    estrucControl
+;
+
+elementoControl ::=
+    retorno
+;
+
+elementoControl ::=
+    sentenciaBreak
+;
+
+
+/* ------------  Break  ---------------- */
+
+sentenciaBreak ::=
+    BREAK
+    DELIMITADOR
+;
+
+
+/* ------------  Expresion  ---------------- */
+
+expresion ::=
+    expresionNumerica
+;
+
+expresion ::=
+    expresionBool
+;
+
+expresion ::=
+    expresionChar
+;
+
+expresion ::=
+    expresionString
+;
+
+
+/* ------------  Numerica  ---------------- */
+
+expresionNumerica ::=
+    expresionModulo
+;
+
+
+expresionNumericaNoIdent ::=
+    expresionModuloNoIdent
+;
+
+
+/* ------------  Modulo  ---------------- */
+
+expresionModulo ::=
+    referenciaContextual
+;
+
+expresionModulo ::=
+    expresionModuloNoIdent
+;
+
+
+expresionModuloNoIdent ::=
+    expresionMultiplicativaNoIdent
+;
+
+expresionModuloNoIdent ::=
+    expresionModulo
+    operadorModulo
+    expresionMultiplicativa
+;
+
+
+operadorModulo ::=
+    MODULO
+;
+
+
+/* ------------  Multi/Div  ---------------- */
+
+expresionMultiplicativa ::=
+    referenciaContextual
+;
+
+expresionMultiplicativa ::=
+    expresionMultiplicativaNoIdent
+;
+
+
+expresionMultiplicativaNoIdent ::=
+    expresionSumaNoIdent
+;
+
+expresionMultiplicativaNoIdent ::=
+    expresionMultiplicativa
+    operadorMultiplicativo
+    expresionSuma
+;
+
+
+operadorMultiplicativo ::=
+    MULTIPLICACION
+;
+
+operadorMultiplicativo ::=
+    DIVISION
+;
+
+operadorMultiplicativo ::=
+    DIVISION_ENTERA
+;
+
+
+/* ------------  Suma/resta  ---------------- */
+
+expresionSuma ::=
+    referenciaContextual
+;
+
+expresionSuma ::=
+    expresionSumaNoIdent
+;
+
+
+expresionSumaNoIdent ::=
+    expresionPotenciaNoIdent
+;
+
+expresionSumaNoIdent ::=
+    expresionSuma
+    operadorSuma
+    expresionPotencia
+;
+
+
+operadorSuma ::=
+    MAS
+;
+
+operadorSuma ::=
+    MENOS
+;
+
+
+/* ------------  Potencia  ---------------- */
+
+expresionPotencia ::=
+    referenciaContextual
+;
+
+expresionPotencia ::=
+    expresionPotenciaNoIdent
+;
+
+
+expresionPotenciaNoIdent ::=
+    operandoNumericoNoIdent
+;
+
+expresionPotenciaNoIdent ::=
+    operandoNumerico
+    operadorPotencia
+    potenciaPositiva
+;
+
+operadorPotencia ::=
+    POTENCIA
+;
+
+potenciaPositiva ::=
+    ENTERO_POSITIVO
+;
+
+
+/* ------------  op Numerico  ---------------- */
+
+operandoNumerico ::=
+    referenciaContextual
+;
+
+operandoNumerico ::=
+    operandoNumericoNoIdent
+;
+
+
+operandoNumericoNoIdent ::=
+    literalInt
+;
+
+operandoNumericoNoIdent ::=
+    literalFloat
+;
+
+operandoNumericoNoIdent ::=
+    expresionUnaria
+;
+
+operandoNumericoNoIdent ::=
+    grupoReferencia
+;
+
+operandoNumericoNoIdent ::=
+    grupoNumerico
+;
+
+operandoNumericoNoIdent ::=
+    obtenerDatoArreglo
+;
+
+
+/* ------------  Grupo Referencia  ---------------- */
+
+grupoReferencia ::=
+    PARENTESIS_ABRE
+    referenciaContextual
+    PARENTESIS_CIERRA
+;
+
+
+/* ------------  Grupo Numerico  ---------------- */
+
+grupoNumerico ::=
+    PARENTESIS_ABRE
+    expresionNumericaNoIdent
+    PARENTESIS_CIERRA
+;
+
+
+/* ------------  Unarias  ---------------- */
+
+expresionUnaria ::=
+    expresionNegativa
+;
+
+expresionUnaria ::=
+    expresionPostfija
+;
+
+/* ------------  Negativo  ---------------- */
+
+expresionNegativa ::=
+    MENOS
+    literalInt
+;
+
+expresionNegativa ::=
+    MENOS
+    literalFloat
+;
+
+
+/* ------------  Incremento/ decremento  ---------------- */
+
+expresionPostfija ::=
+    IDENTIFICADOR
+    operadorPostfijo
+;
+
+
+operadorPostfijo ::=
+    INCREMENTO
+;
+
+operadorPostfijo ::=
+    DECREMENTO
+;
+
+
+/* ------------  exp Rel  ---------------- */
+
+expresionRelacional ::=
+    expresionRelacionNumerica
+;
+
+expresionRelacional ::=
+    expresionComparacionBool
+;
+
+expresionRelacional ::=
+    expresionComparacionChar
+;
+
+
+/* ------------  Relacion Numerica  ---------------- */
+
+expresionRelacionNumerica ::=
+    CORCHETE_ABRE
+    expresionNumerica
+    CORCHETE_CIERRA
+    continuacionRelacionNumerica
+;
+
+continuacionRelacionNumerica ::=
+    operadorOrden
+    CORCHETE_ABRE
+    expresionNumerica
+    CORCHETE_CIERRA
+;
+
+continuacionRelacionNumerica ::=
+    operadorComparacion
+    CORCHETE_ABRE
+    operandoIgualdad
+    CORCHETE_CIERRA
+;
+
+
+/* ------------  Logica  ---------------- */
+
+operadorOrden ::=
+    MENOR
+;
+
+operadorOrden ::=
+    MENOR_IGUAL
+;
+
+operadorOrden ::=
+    MAYOR
+;
+
+operadorOrden ::=
+    MAYOR_IGUAL
+;
+
+
+/* ------------  Comparacion bool  ---------------- */
+
+expresionComparacionBool ::=
+    CORCHETE_ABRE
+    expresionBool
+    CORCHETE_CIERRA
+    operadorComparacion
+    CORCHETE_ABRE
+    operandoIgualdad
+    CORCHETE_CIERRA
+;
+
+
+/* ------------  compararChar  ---------------- */
+
+expresionComparacionChar ::=
+    CORCHETE_ABRE
+    expresionChar
+    CORCHETE_CIERRA
+    operadorComparacion
+    CORCHETE_ABRE
+    operandoIgualdad
+    CORCHETE_CIERRA
+;
+
+
+/* ------------  Operando Igualdad  ---------------- */
+
+operandoIgualdad ::=
+    expresionNumerica
+;
+
+operandoIgualdad ::=
+    expresionBool
+;
+
+operandoIgualdad ::=
+    expresionChar
+;
+
+
+operadorComparacion ::=
+    IGUAL
+;
+
+operadorComparacion ::=
+    DIFERENTE
+;
+
+
+/* ------------  expr Bool  ---------------- */
+
+expresionBool ::=
+    literalBool
+;
+
+expresionBool ::=
+    expresionRelacional
+;
+
+expresionBool ::=
+    expresionConjuncion
+;
+
+expresionBool ::=
+    expresionDisyuncion
+;
+
+expresionBool ::=
+    expresionNegacion
+;
+
+
+/* ------------  Grupo Bool  ---------------- */
+
+grupoBooleano ::=
+    PARENTESIS_ABRE
+    expresionBool
+    PARENTESIS_CIERRA
+;
+
+
+/* ------------  Grupo Logico  ---------------- */
+
+grupoLogico ::=
+    grupoBooleano
+;
+
+grupoLogico ::=
+    grupoReferencia
+;
+
+
+/* ------------  Conjuncion  ---------------- */
+
+expresionConjuncion ::=
+    grupoLogico
+    CONJUNCION
+    grupoLogico
+;
+
+
+/* ------------  Disyuncion  ---------------- */
+
+expresionDisyuncion ::=
+    grupoLogico
+    DISYUNCION
+    grupoLogico
+;
+
+
+/* ------------  Negacion  ---------------- */
+
+expresionNegacion ::=
+    NEGACION
+    grupoLogico
+;
+
+
+/* ------------  char  ---------------- */
+
+expresionChar ::=
+    literalChar
+;
+
+
+/* ------------  string  ---------------- */
+
+expresionString ::=
+    literalString
+;
+
+
+/* ------------  literal int  ---------------- */
+
+literalInt ::=
+    CERO
+;
+
+literalInt ::=
+    ENTERO_POSITIVO
+;
+
+
+/* ------------  literal float  ---------------- */
+
+literalFloat ::=
+    LITERAL_FLOAT
+;
+
+
+/* ------------  literal bool  ---------------- */
+
+literalBool ::=
+    TRUE
+;
+
+literalBool ::=
+    FALSE
+;
+
+
+/* ------------  literal char  ---------------- */
+
+literalChar ::=
+    LITERAL_CHAR
+;
+
+
+/* ------------  literal String  ---------------- */
+
+literalString ::=
+    LITERAL_STRING
+;
+
+/* ------------  Errores, estados de sincronizacion  ---------------- */
+
+
+sentencia ::= error DELIMITADOR;
+
+
+declaracionVarGlobal ::= error DELIMITADOR;
+
+
+condicion ::= error;
+
+
+parametro ::= error;
+
+
+argumento ::= error;
+
+
+inicializacionFor ::= error;
+actualizacionFor  ::= error;
+
+
+obtenerDatoArreglo ::=
+    IDENTIFICADOR CORCHETE_ABRE error CORCHETE_CIERRA;
