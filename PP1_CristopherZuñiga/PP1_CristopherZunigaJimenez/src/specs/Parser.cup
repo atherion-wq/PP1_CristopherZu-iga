@@ -1,10 +1,38 @@
 package compiler;
 
 import java_cup.runtime.Symbol;
+import java.util.ArrayList;
 import java.util.List;
 
 parser code {:
     public java.util.List<ErrorCompilador> errores = new java.util.ArrayList<>();
+
+    public static final class Ambito {
+        public final String nombre;
+        public final long inicio;
+        public final long fin;
+        public final boolean esFuncion;
+
+        private Ambito(String nombre, long inicio, long fin, boolean esFuncion) {
+            this.nombre = nombre;
+            this.inicio = inicio;
+            this.fin = fin;
+            this.esFuncion = esFuncion;
+        }
+    }
+
+    public final List<Ambito> ambitos = new ArrayList<>();
+
+    public static long posicion(int linea, int columna) {
+        return ((long) linea << 32) | Integer.toUnsignedLong(columna);
+    }
+
+    private void registrarAmbito(String nombre, int lineaInicio, int columnaInicio,
+                                 int lineaFin, int columnaFin, boolean esFuncion) {
+        ambitos.add(new Ambito(nombre, posicion(lineaInicio, columnaInicio),
+                              posicion(lineaFin, columnaFin), esFuncion));
+    }
+
 
         private String nombreToken(int id) {
             for (java.lang.reflect.Field f : sym.class.getFields()) {
@@ -180,6 +208,7 @@ non terminal salidaEst;
 non terminal datoSalida;
 
 non terminal arreglo;
+non terminal tamanoArreglo;
 non terminal listaElementosArreglo;
 
 non terminal obtenerDatoArreglo;
@@ -336,23 +365,27 @@ declaracionVarGlobal ::=
 
 funcion ::=
     tipoRetornoFuncion
-    IDENTIFICADOR
-    PARENTESIS_ABRE
+    IDENTIFICADOR:nombre
+    PARENTESIS_ABRE:inicioAmbito
     PARENTESIS_CIERRA
     BLOQUE_ABRE
     bloqueFuncion
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, true); :}
 ;
 
 funcion ::=
     tipoRetornoFuncion
-    IDENTIFICADOR
-    PARENTESIS_ABRE
+    IDENTIFICADOR:nombre
+    PARENTESIS_ABRE:inicioAmbito
     listaParametros
     PARENTESIS_CIERRA
     BLOQUE_ABRE
     bloqueFuncion
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, true); :}
 ;
 
 
@@ -499,12 +532,14 @@ referenciaContextual ::=
 
 principal ::=
     VOID
-    MAIN
-    PARENTESIS_ABRE
+    MAIN:nombre
+    PARENTESIS_ABRE:inicioAmbito
     PARENTESIS_CIERRA
     BLOQUE_ABRE
     bloqueCod
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, true); :}
 ;
 
 
@@ -603,7 +638,16 @@ tipoVariable ::=
 crearAsignarVariable ::=
     crearVariable
     ASIGNACION
-    valorAsignable
+    expresion
+;
+
+crearAsignarVariable ::=
+    crearVariable
+    CORCHETE_ABRE
+    tamanoArreglo
+    CORCHETE_CIERRA
+    ASIGNACION
+    arreglo
 ;
 
 
@@ -628,6 +672,11 @@ valorAsignable ::=
 
 
 /* ------------  Arreglos  ---------------- */
+
+tamanoArreglo ::=
+    literalInt
+;
+
 
 arreglo ::=
     BLOQUE_ABRE
@@ -696,6 +745,10 @@ datoSalida ::=
 ;
 
 datoSalida ::=
+    expresionNegativa
+;
+
+datoSalida ::=
     IDENTIFICADOR
 ;
 
@@ -732,9 +785,11 @@ estructuraIf ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 estructuraIf ::=
@@ -742,10 +797,12 @@ estructuraIf ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
     listaElif
+    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 estructuraIf ::=
@@ -753,10 +810,12 @@ estructuraIf ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
     estructuraElse
+    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 
@@ -767,11 +826,13 @@ estructuraIf ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
     listaElif
     estructuraElse
+    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 listaElif ::=
@@ -789,16 +850,20 @@ estructuraElif ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito("elif", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 estructuraElse ::=
     ELSE
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito("else", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 
@@ -809,9 +874,11 @@ estructuraWhile ::=
     PARENTESIS_ABRE
     condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
+    BLOQUE_ABRE:inicioAmbito
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito("while", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 
@@ -819,7 +886,7 @@ estructuraWhile ::=
 
 estructuraFor ::=
     FOR
-    PARENTESIS_ABRE
+    PARENTESIS_ABRE:inicioAmbito
     inicializacionFor
     COMA
     condicion
@@ -828,7 +895,9 @@ estructuraFor ::=
     PARENTESIS_CIERRA
     BLOQUE_ABRE
     bloqueControl
-    BLOQUE_CIERRA
+    BLOQUE_CIERRA:finAmbito
+    {: parser.registrarAmbito("for", inicioAmbitoleft, inicioAmbitoright,
+                              finAmbitoleft, finAmbitoright, false); :}
 ;
 
 inicializacionFor ::=
@@ -1245,6 +1314,10 @@ operadorComparacion ::=
 
 expresionBool ::=
     literalBool
+;
+
+expresionBool ::=
+    grupoBooleano
 ;
 
 expresionBool ::=

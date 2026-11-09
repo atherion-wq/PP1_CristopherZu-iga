@@ -1,31 +1,37 @@
-val float precio Ͱ 5.1  »
+val int global Ͱ 1»
 
-void main є: :э ¿:
+int calcular є: int parametro :э ¿:
+    return parametro»
+:?
 
-    val int a Ͱ 10 + * 5»
+void principal є: :э ¿:
+    val int inicio Ͱ 1»
 
-    val int b Ͱ 20»
+    if є: true :э ¿:
+        val int datosʃ:3:ʅ Ͱ ¿: 1, 2, 3 :? »
 
-    val int numeros Ͱ ¿: 1, 2, 3 :? »
+        while є: true :э ¿:
+            val int interior Ͱ 1»
+        :?
 
-    val int x Ͱ numeros ʃ: + 1 :ʅ»
-
-    val int y Ͱ 30»
-
-    if є: 10 + * 2 :э ¿:
-        val int z Ͱ 40»
+        val int despuesWhile Ͱ 1»
+    :? elif є: false :э ¿:
+        val int alternativa Ͱ 1»
+    :? else ¿:
+        val int otro Ͱ 1»
     :?
 
-    val int w Ͱ 50»
+    if є: true :э ¿:
+        val int hermano Ͱ 1»
+    :?
 
-    for є: i Ͱ 0, true, + 1 :э ¿:
+    for є: val int indice Ͱ 1, true, indice++ :э ¿:
+        val int ciclo Ͱ 1»
+    :?
+
+    val bool comparacion Ͱ є: ʃ:12:ʅ >= ʃ:34+35:ʅ :э»
+    while є: є: true :э λ є: Σ є: ʃ:12:ʅ >= ʃ:34+35:ʅ :э :э :э ¿:
         break»
     :?
-
-    val int k Ͱ 60»
-
-    calcular ( 10, , 20 :э »
-
-    val int final Ͱ 70»
-
+    val int finalizado Ͱ 1»
 :?

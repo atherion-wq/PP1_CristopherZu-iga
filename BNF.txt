@@ -179,7 +179,7 @@ listaGlobal ::= elementoGlobal listaGlobal
 elementoGlobal ::= declaracionVarGlobal
 elementoGlobal ::= funcion
 
-principal ::= 'void' 'main' parentesisAbre parentesisCierra bloqueAbre bloqueCod bloqueCierra
+principal ::= 'void' 'principal' parentesisAbre parentesisCierra bloqueAbre bloqueCod bloqueCierra
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -208,7 +208,9 @@ crearVariable ::= 'val' tipoVariable Identificador
 --------------------------------------------------------------------------------------------------------------------------------------------------
 "Crear y asignar variables"
 
-crearAsignarVariable ::= crearVariable asignacion valorAsignable
+crearAsignarVariable ::= crearVariable asignacion expresion
+crearAsignarVariable ::= crearVariable corcheteAbre tamanoArreglo corcheteCierra asignacion arreglo
+tamanoArreglo ::= literalInt
 
 valorAsignable ::= expresion
 valorAsignable ::= arreglo
@@ -247,6 +249,7 @@ datoSalida ::= literalString
 datoSalida ::= literalInt
 datoSalida ::= literalBool
 datoSalida ::= literalFloat
+datoSalida ::= expresionNegativa
 datoSalida ::= Identificador
 datoSalida ::= arreglo
 
@@ -358,7 +361,7 @@ expresionNumerica ::= expresionModulo
 expresionModulo ::= expresionMultiplicativa
 expresionModulo ::= expresionModulo operadorModulo expresionMultiplicativa
 
-operadorModulo ::= '%'
+operadorModulo ::= 'mod'
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -385,7 +388,7 @@ operadorSuma ::= '+' | '-'
 expresionPotencia ::= operandoNumerico
 expresionPotencia ::= operandoNumerico operadorPotencia potenciaPositiva
 
-operadorPotencia ::= '^'
+operadorPotencia ::= 'pot'
 
 potenciaPositiva ::= digitoNoCero
 potenciaPositiva ::= digitoNoCero secuenciaDigitos
@@ -467,9 +470,12 @@ operadorComparacion ::= '==' | '!='
 
 expresionBool ::= operandoBool
 expresionBool ::= expresionRelacional
+expresionBool ::= grupoBooleano
 expresionBool ::= expresionConjuncion
 expresionBool ::= expresionDisyuncion
 expresionBool ::= expresionNegacion
+
+grupoBooleano ::= parentesisAbre expresionBool parentesisCierra
 
 
 operandoBool ::= literalBool

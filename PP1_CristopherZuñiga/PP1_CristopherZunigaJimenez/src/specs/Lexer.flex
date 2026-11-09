@@ -63,7 +63,7 @@ ESPACIO = [ \t\f\r\n]+
     return symbol(sym.VOID);
 }
 
-<YYINITIAL>"main" {
+<YYINITIAL>"principal" {
     return symbol(sym.MAIN);
 }
 
@@ -271,11 +271,11 @@ ESPACIO = [ \t\f\r\n]+
     return symbol(sym.DIVISION);
 }
 
-<YYINITIAL>"%" {
+<YYINITIAL>"mod" {
     return symbol(sym.MODULO);
 }
 
-<YYINITIAL>"^" {
+<YYINITIAL>"pot" {
     return symbol(sym.POTENCIA);
 }
 

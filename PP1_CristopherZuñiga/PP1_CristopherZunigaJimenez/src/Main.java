@@ -7,11 +7,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
 import java.io.BufferedWriter;
-import java.io.FileReader;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java_cup.runtime.Symbol;
 
 public class Main {
@@ -112,20 +117,41 @@ public class Main {
 
     public static void creacionTokens(String archivoFuente, String archivoTokens) throws IOException {
 
-        Lexer lexerTokens = new Lexer(new FileReader(archivoFuente));
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(archivoFuente))) {
+            Parser parser = new Parser(new Lexer(reader));
+            analizarYGenerarTokens(archivoFuente, archivoTokens, parser);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Error durante el análisis", e);
+        }
+    }
 
-        String scope = "GLOBAL";
-        int profundidadBloques = 0;
-        int bloqueFuncion = -1;
+    private static void analizarYGenerarTokens(String archivoFuente, String archivoTokens,
+                                               Parser parser) throws Exception {
+        try {
+            parser.parse();
+        } finally {
+            escribirTokens(archivoFuente, archivoTokens, parser.ambitos);
+        }
+    }
 
-        boolean esperandoNombreFuncion = false;
-        boolean esperandoMain = true;
+    private static void escribirTokens(String archivoFuente, String archivoTokens,
+                                       List<Parser.Ambito> ambitos) throws IOException {
+        Map<Long, Parser.Ambito> aperturas = new HashMap<>();
+        for (Parser.Ambito ambito : ambitos) {
+            aperturas.put(ambito.inicio, ambito);
+        }
 
-        int tokenAnterior = -1;
+        Deque<Parser.Ambito> activos = new ArrayDeque<>();
+        Deque<String> rutas = new ArrayDeque<>();
+        Map<String, Integer> contadorBloques = new HashMap<>();
+        rutas.push("GLOBAL");
 
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                Path.of(archivoTokens),
-                StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(archivoFuente));
+             BufferedWriter writer = Files.newBufferedWriter(
+                     Path.of(archivoTokens), StandardCharsets.UTF_8)) {
+            Lexer lexerTokens = new Lexer(reader);
 
             writer.write(String.format(
                     "%-25s %-30s %-20s %-15s %-10s %-10s%n",
@@ -170,38 +196,23 @@ public class Main {
                     lexema = token.value.toString();
                 }
 
-                String scopeToken = scope;
-
-
-                if (token.sym == sym.MAIN &&
-                        esperandoMain) {
-
-                    scopeToken = "GLOBAL";
-                    scope = "main";
-                    bloqueFuncion = -1;
-                    esperandoMain = false;
+                long posicion = Parser.posicion(token.left, token.right);
+                while (!activos.isEmpty() && activos.peek().fin < posicion) {
+                    activos.pop();
+                    rutas.pop();
                 }
 
-                if (scope.equals("GLOBAL")) {
-                    if ((token.sym == sym.INT ||
-                            token.sym == sym.FLOAT ||
-                            token.sym == sym.CHAR ||
-                            token.sym == sym.BOOL)
-                            && tokenAnterior != sym.VAL) {
-
-                        esperandoNombreFuncion = true;
+                Parser.Ambito apertura = aperturas.get(posicion);
+                if (apertura != null) {
+                    String ruta = apertura.nombre;
+                    if (!apertura.esFuncion) {
+                        String prefijo = rutas.peek() + "/" + apertura.nombre;
+                        int numero = contadorBloques.merge(prefijo, 1, Integer::sum);
+                        ruta = prefijo + "#" + numero;
                     }
+                    activos.push(apertura);
+                    rutas.push(ruta);
                 }
-
-                if (token.sym == sym.IDENTIFICADOR &&
-                        esperandoNombreFuncion) {
-
-                    scopeToken = "GLOBAL";
-                    scope = lexema;
-                    bloqueFuncion = -1;
-                    esperandoNombreFuncion = false;
-                }
-
 
                 String tablaSimbolos =
                         obtenerTablaSimbolos(nombreToken);
@@ -212,39 +223,11 @@ public class Main {
                         nombreToken,
                         lexema,
                         tablaSimbolos,
-                        scopeToken,
+                        rutas.peek(),
                         token.left,
                         token.right
                 ));
 
-
-                if (token.sym == sym.BLOQUE_ABRE) {
-
-                    profundidadBloques++;
-
-                    if (!scope.equals("GLOBAL") &&
-                            bloqueFuncion == -1) {
-
-                        bloqueFuncion = profundidadBloques;
-                    }
-                }
-
-                if (token.sym == sym.BLOQUE_CIERRA) {
-
-                    int nivelAntesDeCerrar =
-                            profundidadBloques;
-
-                    profundidadBloques--;
-
-                    if (!scope.equals("GLOBAL") &&
-                            nivelAntesDeCerrar == bloqueFuncion) {
-
-                        scope = "GLOBAL";
-                        bloqueFuncion = -1;
-                    }
-                }
-
-                tokenAnterior = token.sym;
 
             } while (true);
         }
@@ -264,16 +247,9 @@ public class Main {
 
         String archivoTokens = "tokens.txt";
 
-        try {
-            creacionTokens(archivoFuente, archivoTokens);
-
-            Lexer lexerParser = new Lexer(
-                    new FileReader(archivoFuente)
-            );
-
-            Parser parser = new Parser(lexerParser);
-
-            parser.parse();
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(archivoFuente))) {
+            Parser parser = new Parser(new Lexer(reader));
+            analizarYGenerarTokens(archivoFuente, archivoTokens, parser);
 
             System.out.println(
                     "Archivo de tokens generado correctamente: "
