@@ -1,40 +1,44 @@
+val int datosʃ:4:ʅ Ͱ ¿:2,4,6,8:?»
 val int base Ͱ 2»
 
-int elegir є: bool activo :э ¿:
-    if є: activo :э ¿:
-        return base»
+int ajustar є: int valor :э ¿:
+    if є: ʃ:valor:ʅ >= ʃ:6:ʅ :э ¿:
+        return valor + base»
+    :? elif є: ʃ:valor:ʅ == ʃ:4:ʅ :э ¿:
+        return valor pot 2»
+    :? else ¿:
+        return valor mod 3»
     :?
 :?
 
-float mitad є: int n :э ¿:
-    return n // 2»
+float promedio є: int suma, int cantidad :э ¿:
+    return suma / cantidad»
 :?
 
 void principal є: :э ¿:
-    val int total Ͱ true»
+    val int limite»
+    read є:limite:э»
     val int total Ͱ 0»
-    val int copia Ͱ fantasma»
-    val bool activo Ͱ true»
-    val char letra»
-    val int datosʃ:3:ʅ Ͱ ¿:1,2,3:?»
+    val int procesados Ͱ 0»
 
-    if є: total :э ¿:
-        val int local Ͱ 1»
+    for є: val int i Ͱ 0, ʃ:i:ʅ < ʃ:4:ʅ, i++ :э ¿:
+        while є: ʃ:datosʃ:i:ʅ:ʅ > ʃ:limite:ʅ :э ¿:
+            datosʃ:i:ʅ Ͱ datosʃ:i:ʅ - 1»
+            break»
+        :?
+
+        datosʃ:i:ʅ Ͱ ajustarє:datosʃ:i:ʅ:э»
+        total Ͱ total + datosʃ:i:ʅ»
+        procesados++»
+
+        if є: є:ʃ:total:ʅ > ʃ:20:ʅ:э λ є:Σ є:false:э:э :э ¿:
+            break»
+        :?
     :?
-    total Ͱ local»
 
-    datos Ͱ ¿:1,2,3,4:?»
-    datosʃ:3:ʅ Ͱ 99»
-    datosʃ:0:ʅ Ͱ 1.5»
-    val int muestra Ͱ datosʃ:0.5:ʅ»
-
-    elegirє:2:э»
-    mitadє::э»
-    read є:activo:э»
-    write є:letra:э»
-    activo++»
-
-    if є: true :э ¿:
-        break»
-    :?
+    val float media Ͱ promedioє:total, procesados:э»
+    val float muestra Ͱ promedioє:ajustarє:4:э, 2:э»
+    write є:"Promedio":э»
+    write є:media:э»
+    write є:muestra:э»
 :?

@@ -1,0 +1,88 @@
+array int datos, 4
+datos[0] = 2
+datos[1] = 4
+datos[2] = 6
+datos[3] = 8
+base = 2
+func ajustar(valor)
+t1 = valor >= 6
+ifFalse t1 goto L2
+t2 = valor + base
+return t2
+goto L1
+L2:
+t3 = valor == 4
+ifFalse t3 goto L3
+t4 = valor pot 2
+return t4
+goto L1
+L3:
+t5 = valor mod 3
+return t5
+L1:
+endfunc ajustar
+func promedio(suma, cantidad)
+t6 = suma / cantidad
+return t6
+endfunc promedio
+func principal()
+var int limite
+read limite
+total = 0
+procesados = 0
+i = 0
+inicioFor1:
+t7 = i < 4
+ifFalse t7 goto salidaFor1
+inicioWhile1:
+bounds datos, i
+t8 = datos[i]
+t9 = t8 > limite
+ifFalse t9 goto salidaWhile1
+t10 = i
+bounds datos, t10
+bounds datos, i
+t11 = datos[i]
+t12 = t11 - 1
+datos[t10] = t12
+goto salidaWhile1
+goto inicioWhile1
+salidaWhile1:
+t13 = i
+bounds datos, t13
+bounds datos, i
+t14 = datos[i]
+param t14
+t15 = call ajustar, 1
+datos[t13] = t15
+bounds datos, i
+t16 = datos[i]
+t17 = total + t16
+total = t17
+t18 = procesados
+procesados = t18 + 1
+t19 = total > 20
+t20 = Σ false
+t21 = t19 λ t20
+ifFalse t21 goto L4
+goto salidaFor1
+L4:
+t22 = i
+i = t22 + 1
+goto inicioFor1
+salidaFor1:
+t23 = total
+param t23
+param procesados
+t24 = call promedio, 2
+media = t24
+param 4
+t25 = call ajustar, 1
+param t25
+param 2
+t26 = call promedio, 2
+muestra = t26
+write "Promedio"
+write media
+write muestra
+endfunc principal

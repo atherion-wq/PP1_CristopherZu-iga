@@ -284,6 +284,10 @@ public class Main {
 
                 if (erroresSemanticos.isEmpty()) {
                     System.out.println("Programa sintáctica y semánticamente correcto.");
+                    Path archivoIntermedio = Path.of("codigoIntermedio.txt");
+                    List<String> instrucciones = GeneradorCodigoIntermedio.generar(programa);
+                    Files.write(archivoIntermedio, instrucciones, StandardCharsets.UTF_8);
+                    System.out.println("Código intermedio generado en " + archivoIntermedio.toAbsolutePath());
                 } else {
                     erroresSemanticos.forEach(System.err::println);
                 }

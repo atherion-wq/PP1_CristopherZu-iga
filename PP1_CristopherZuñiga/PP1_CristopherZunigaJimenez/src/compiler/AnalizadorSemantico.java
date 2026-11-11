@@ -103,6 +103,7 @@ public final class AnalizadorSemantico {
                 }
                 comprobarTipo(tipoRetornoActual, nodo.hijos.get(0));
                 break;
+            case IDENTIFICADOR:
             case OPERACION_BINARIA:
             case OPERACION_UNARIA:
             case ACCESO_ARREGLO:
@@ -287,9 +288,11 @@ public final class AnalizadorSemantico {
     }
 
     private void registrarVariable(Nodo nombre, Variable variable) {
-        if (scopes.peek().putIfAbsent(nombre.texto, variable) != null) {
-            error(nombre, "La variable ya fue declarada en este scope");
+        if (encontrarVariableVisible(nombre.texto) != null) {
+            error(nombre, "La variable ya fue declarada en un scope visible");
+            return;
         }
+        scopes.peek().put(nombre.texto, variable);
     }
 
     private void comprobarEntradaSalida(Nodo nodo, String operacion, List<String> tiposPermitidos) {
@@ -506,14 +509,20 @@ public final class AnalizadorSemantico {
     }
 
     private Variable buscarVariable(Nodo nombre) {
+        Variable variable = encontrarVariableVisible(nombre.texto);
+        if (variable == null) {
+            error(nombre, "La variable no está declarada en un scope visible");
+        }
+        return variable;
+    }
+
+    private Variable encontrarVariableVisible(String nombre) {
         for (Map<String, Variable> scope : scopes) {
-            Variable variable = scope.get(nombre.texto);
+            Variable variable = scope.get(nombre);
             if (variable != null) {
                 return variable;
             }
         }
-
-        error(nombre, "La variable no está declarada en un scope visible");
         return null;
     }
 
