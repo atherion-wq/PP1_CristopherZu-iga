@@ -1,37 +1,40 @@
-val int global Ͱ 1»
+val int base Ͱ 2»
 
-int calcular є: int parametro :э ¿:
-    return parametro»
+int elegir є: bool activo :э ¿:
+    if є: activo :э ¿:
+        return base»
+    :?
+:?
+
+float mitad є: int n :э ¿:
+    return n // 2»
 :?
 
 void principal є: :э ¿:
-    val int inicio Ͱ 1»
+    val int total Ͱ true»
+    val int total Ͱ 0»
+    val int copia Ͱ fantasma»
+    val bool activo Ͱ true»
+    val char letra»
+    val int datosʃ:3:ʅ Ͱ ¿:1,2,3:?»
+
+    if є: total :э ¿:
+        val int local Ͱ 1»
+    :?
+    total Ͱ local»
+
+    datos Ͱ ¿:1,2,3,4:?»
+    datosʃ:3:ʅ Ͱ 99»
+    datosʃ:0:ʅ Ͱ 1.5»
+    val int muestra Ͱ datosʃ:0.5:ʅ»
+
+    elegirє:2:э»
+    mitadє::э»
+    read є:activo:э»
+    write є:letra:э»
+    activo++»
 
     if є: true :э ¿:
-        val int datosʃ:3:ʅ Ͱ ¿: 1, 2, 3 :? »
-
-        while є: true :э ¿:
-            val int interior Ͱ 1»
-        :?
-
-        val int despuesWhile Ͱ 1»
-    :? elif є: false :э ¿:
-        val int alternativa Ͱ 1»
-    :? else ¿:
-        val int otro Ͱ 1»
-    :?
-
-    if є: true :э ¿:
-        val int hermano Ͱ 1»
-    :?
-
-    for є: val int indice Ͱ 1, true, indice++ :э ¿:
-        val int ciclo Ͱ 1»
-    :?
-
-    val bool comparacion Ͱ є: ʃ:12:ʅ >= ʃ:34+35:ʅ :э»
-    while є: є: true :э λ є: Σ є: ʃ:12:ʅ >= ʃ:34+35:ʅ :э :э :э ¿:
         break»
     :?
-    val int finalizado Ͱ 1»
 :?

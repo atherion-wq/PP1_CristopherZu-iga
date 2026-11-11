@@ -1,6 +1,4 @@
-import compiler.Lexer;
-import compiler.Parser;
-import compiler.sym;
+import compiler.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -127,23 +125,32 @@ public class Main {
         }
     }
 
-    private static void analizarYGenerarTokens(String archivoFuente, String archivoTokens,
+    private static Nodo analizarYGenerarTokens(String archivoFuente, String archivoTokens,
                                                Parser parser) throws Exception {
         try {
-            parser.parse();
+            Symbol resultado = parser.parse();
+
+            if (resultado != null && resultado.value instanceof Nodo raiz) {
+                if (raiz.clase == Nodo.Clase.PROGRAMA) {
+                    return raiz;
+                }
+            }
+
+            return null;
+
         } finally {
-            escribirTokens(archivoFuente, archivoTokens, parser.ambitos);
+            escribirTokens(archivoFuente, archivoTokens, parser.scopes);
         }
     }
 
     private static void escribirTokens(String archivoFuente, String archivoTokens,
-                                       List<Parser.Ambito> ambitos) throws IOException {
-        Map<Long, Parser.Ambito> aperturas = new HashMap<>();
-        for (Parser.Ambito ambito : ambitos) {
-            aperturas.put(ambito.inicio, ambito);
+                                       List<Parser.Scope> scopes) throws IOException {
+        Map<Long, Parser.Scope> aperturas = new HashMap<>();
+        for (Parser.Scope scope : scopes) {
+            aperturas.put(scope.inicio, scope);
         }
 
-        Deque<Parser.Ambito> activos = new ArrayDeque<>();
+        Deque<Parser.Scope> activos = new ArrayDeque<>();
         Deque<String> rutas = new ArrayDeque<>();
         Map<String, Integer> contadorBloques = new HashMap<>();
         rutas.push("GLOBAL");
@@ -202,7 +209,7 @@ public class Main {
                     rutas.pop();
                 }
 
-                Parser.Ambito apertura = aperturas.get(posicion);
+                Parser.Scope apertura = aperturas.get(posicion);
                 if (apertura != null) {
                     String ruta = apertura.nombre;
                     if (!apertura.esFuncion) {
@@ -233,6 +240,17 @@ public class Main {
         }
     }
 
+    private static void imprimirArbol(Nodo nodo, int nivel) {
+        String sangria = "  ".repeat(nivel);
+        String texto = nodo.texto.isEmpty() ? "" : " " + nodo.texto;
+
+        System.out.println(sangria + nodo.clase + texto);
+
+        for (Nodo hijo : nodo.hijos) {
+            imprimirArbol(hijo, nivel + 1);
+        }
+    }
+
     public static void main(String[] args) throws IOException {
 
         File archivo = pedirArchivoTxt();
@@ -249,23 +267,26 @@ public class Main {
 
         try (BufferedReader reader = Files.newBufferedReader(Path.of(archivoFuente))) {
             Parser parser = new Parser(new Lexer(reader));
-            analizarYGenerarTokens(archivoFuente, archivoTokens, parser);
+            Nodo programa = analizarYGenerarTokens(archivoFuente, archivoTokens, parser);
 
-            System.out.println(
-                    "Archivo de tokens generado correctamente: "
-                            + archivoTokens
-            );
+            if (programa != null) {
+                imprimirArbol(programa, 0);
+            }
 
-            if (parser.errores.isEmpty()) {
-                System.out.println("Programa sintácticamente correcto.");
-            } else {
+            if (!parser.errores.isEmpty()) {
                 parser.errores.forEach(System.err::println);
+                System.err.println("El archivo fuente contiene errores sintácticos.");
+            } else if (programa == null) {
+                System.err.println("El parser no devolvió el árbol del programa.");
+            } else {
+                List<ErrorCompilador> erroresSemanticos =
+                        AnalizadorSemantico.analizar(programa);
 
-                System.err.println(
-                        "El archivo fuente NO PUEDE ser generado correctamente por la gramática."
-                );
-
-
+                if (erroresSemanticos.isEmpty()) {
+                    System.out.println("Programa sintáctica y semánticamente correcto.");
+                } else {
+                    erroresSemanticos.forEach(System.err::println);
+                }
             }
 
         } catch (Exception e) {

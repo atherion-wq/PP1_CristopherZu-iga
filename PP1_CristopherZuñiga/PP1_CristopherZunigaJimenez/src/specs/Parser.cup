@@ -3,17 +3,48 @@ package compiler;
 import java_cup.runtime.Symbol;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
+
+action code {:
+    private Nodo nodo(Nodo.Clase clase, String texto, int linea, int columna, Nodo... hijos) {
+        return new Nodo(clase, texto, linea, columna, List.of(hijos));
+    }
+
+    private Nodo binaria(Symbol operador, Nodo izquierda, Nodo derecha) {
+        return nodo(Nodo.Clase.OPERACION_BINARIA, (String) operador.value,
+                    operador.left, operador.right, izquierda, derecha);
+    }
+
+    private LinkedList<Nodo> anteponer(Nodo primero, LinkedList<Nodo> resto) {
+        resto.addFirst(primero);
+        return resto;
+    }
+
+    private Nodo bloque(LinkedList<Nodo> sentencias, int linea, int columna) {
+        return new Nodo(Nodo.Clase.BLOQUE, "", linea, columna, sentencias);
+    }
+:}
 
 parser code {:
+    static final class Comparacion {
+        final Symbol operador;
+        final Nodo derecha;
+
+        Comparacion(Symbol operador, Nodo derecha) {
+            this.operador = operador;
+            this.derecha = derecha;
+        }
+    }
+
     public java.util.List<ErrorCompilador> errores = new java.util.ArrayList<>();
 
-    public static final class Ambito {
+    public static final class Scope {
         public final String nombre;
         public final long inicio;
         public final long fin;
         public final boolean esFuncion;
 
-        private Ambito(String nombre, long inicio, long fin, boolean esFuncion) {
+        private Scope(String nombre, long inicio, long fin, boolean esFuncion) {
             this.nombre = nombre;
             this.inicio = inicio;
             this.fin = fin;
@@ -21,15 +52,15 @@ parser code {:
         }
     }
 
-    public final List<Ambito> ambitos = new ArrayList<>();
+    public final List<Scope> scopes = new ArrayList<>();
 
     public static long posicion(int linea, int columna) {
         return ((long) linea << 32) | Integer.toUnsignedLong(columna);
     }
 
-    private void registrarAmbito(String nombre, int lineaInicio, int columnaInicio,
+    private void registrarScope(String nombre, int lineaInicio, int columnaInicio,
                                  int lineaFin, int columnaFin, boolean esFuncion) {
-        ambitos.add(new Ambito(nombre, posicion(lineaInicio, columnaInicio),
+        scopes.add(new Scope(nombre, posicion(lineaInicio, columnaInicio),
                               posicion(lineaFin, columnaFin), esFuncion));
     }
 
@@ -92,24 +123,24 @@ terminal MAIN;
 terminal VAL;
 
 
-terminal INT;
-terminal FLOAT;
-terminal BOOL;
-terminal CHAR;
-terminal STRING;
+terminal String INT;
+terminal String FLOAT;
+terminal String BOOL;
+terminal String CHAR;
+terminal String STRING;
 
-terminal TRUE;
-terminal FALSE;
+terminal String TRUE;
+terminal String FALSE;
 
-terminal IDENTIFICADOR;
+terminal String IDENTIFICADOR;
 
-terminal CERO;
-terminal ENTERO_POSITIVO;
-terminal LITERAL_FLOAT;
+terminal String CERO;
+terminal String ENTERO_POSITIVO;
+terminal String LITERAL_FLOAT;
 
 
-terminal LITERAL_CHAR;
-terminal LITERAL_STRING;
+terminal String LITERAL_CHAR;
+terminal String LITERAL_STRING;
 
 terminal WRITE;
 terminal READ;
@@ -135,169 +166,169 @@ terminal ASIGNACION;
 terminal DELIMITADOR;
 terminal COMA;
 
-terminal MAS;
-terminal MENOS;
+terminal String MAS;
+terminal String MENOS;
 
-terminal MULTIPLICACION;
-terminal DIVISION;
-terminal DIVISION_ENTERA;
+terminal String MULTIPLICACION;
+terminal String DIVISION;
+terminal String DIVISION_ENTERA;
 
-terminal MODULO;
-terminal POTENCIA;
+terminal String MODULO;
+terminal String POTENCIA;
 
-terminal INCREMENTO;
-terminal DECREMENTO;
+terminal String INCREMENTO;
+terminal String DECREMENTO;
 
-terminal MENOR;
-terminal MENOR_IGUAL;
+terminal String MENOR;
+terminal String MENOR_IGUAL;
 
-terminal MAYOR;
-terminal MAYOR_IGUAL;
+terminal String MAYOR;
+terminal String MAYOR_IGUAL;
 
-terminal IGUAL;
-terminal DIFERENTE;
+terminal String IGUAL;
+terminal String DIFERENTE;
 
-terminal CONJUNCION;
-terminal DISYUNCION;
-terminal NEGACION;
+terminal String CONJUNCION;
+terminal String DISYUNCION;
+terminal String NEGACION;
 
 
 /* ------------  No Terminales  ---------------- */
 
-non terminal inicio;
-non terminal programa;
-non terminal principal;
+non terminal Nodo inicio;
+non terminal Nodo programa;
+non terminal Nodo principal;
 
-non terminal listaGlobal;
-non terminal elementoGlobal;
-non terminal declaracionVarGlobal;
+non terminal LinkedList<Nodo> listaGlobal;
+non terminal Nodo elementoGlobal;
+non terminal Nodo declaracionVarGlobal;
 
-non terminal funcion;
+non terminal Nodo funcion;
 
-non terminal tipoRetornoFuncion;
-non terminal tipoParametro;
+non terminal Nodo tipoRetornoFuncion;
+non terminal Nodo tipoParametro;
 
-non terminal parametro;
-non terminal listaParametros;
+non terminal Nodo parametro;
+non terminal LinkedList<Nodo> listaParametros;
 
-non terminal bloqueFuncion;
-non terminal elementoFuncion;
+non terminal LinkedList<Nodo> bloqueFuncion;
+non terminal Nodo elementoFuncion;
 
-non terminal retorno;
+non terminal Nodo retorno;
 
-non terminal invocarFuncion;
-non terminal listaArgumentos;
-non terminal argumento;
+non terminal Nodo invocarFuncion;
+non terminal LinkedList<Nodo> listaArgumentos;
+non terminal Nodo argumento;
 
-non terminal referenciaContextual;
+non terminal Nodo referenciaContextual;
 
-non terminal bloqueCod;
-non terminal elementoBloque;
+non terminal LinkedList<Nodo> bloqueCod;
+non terminal Nodo elementoBloque;
 
-non terminal sentencia;
+non terminal Nodo sentencia;
 
-non terminal crearVariable;
-non terminal crearAsignarVariable;
-non terminal asignarVariable;
+non terminal Nodo crearVariable;
+non terminal Nodo crearAsignarVariable;
+non terminal Nodo asignarVariable;
 
-non terminal tipoVariable;
-non terminal valorAsignable;
+non terminal Nodo tipoVariable;
+non terminal Nodo valorAsignable;
 
-non terminal entradaEst;
-non terminal salidaEst;
-non terminal datoSalida;
+non terminal Nodo entradaEst;
+non terminal Nodo salidaEst;
+non terminal Nodo datoSalida;
 
-non terminal arreglo;
-non terminal tamanoArreglo;
-non terminal listaElementosArreglo;
+non terminal Nodo arreglo;
+non terminal Nodo tamanoArreglo;
+non terminal LinkedList<Nodo> listaElementosArreglo;
 
-non terminal obtenerDatoArreglo;
-non terminal asignarElementoArreglo;
+non terminal Nodo obtenerDatoArreglo;
+non terminal Nodo asignarElementoArreglo;
 
-non terminal estrucControl;
-non terminal condicion;
+non terminal Nodo estrucControl;
+non terminal Nodo condicion;
 
-non terminal estructuraIf;
-non terminal listaElif;
-non terminal estructuraElif;
-non terminal estructuraElse;
+non terminal Nodo estructuraIf;
+non terminal LinkedList<Nodo> listaElif;
+non terminal Nodo estructuraElif;
+non terminal Nodo estructuraElse;
 
-non terminal estructuraWhile;
+non terminal Nodo estructuraWhile;
 
-non terminal estructuraFor;
-non terminal inicializacionFor;
-non terminal actualizacionFor;
+non terminal Nodo estructuraFor;
+non terminal Nodo inicializacionFor;
+non terminal Nodo actualizacionFor;
 
-non terminal bloqueControl;
-non terminal elementoControl;
+non terminal LinkedList<Nodo> bloqueControl;
+non terminal Nodo elementoControl;
 
-non terminal sentenciaBreak;
+non terminal Nodo sentenciaBreak;
 
-non terminal expresion;
+non terminal Nodo expresion;
 
-non terminal expresionNumerica;
-non terminal expresionNumericaNoIdent;
+non terminal Nodo expresionNumerica;
+non terminal Nodo expresionNumericaNoIdent;
 
-non terminal expresionModulo;
-non terminal expresionModuloNoIdent;
+non terminal Nodo expresionModulo;
+non terminal Nodo expresionModuloNoIdent;
 
-non terminal expresionMultiplicativa;
-non terminal expresionMultiplicativaNoIdent;
+non terminal Nodo expresionMultiplicativa;
+non terminal Nodo expresionMultiplicativaNoIdent;
 
-non terminal expresionSuma;
-non terminal expresionSumaNoIdent;
+non terminal Nodo expresionSuma;
+non terminal Nodo expresionSumaNoIdent;
 
-non terminal expresionPotencia;
-non terminal expresionPotenciaNoIdent;
+non terminal Nodo expresionPotencia;
+non terminal Nodo expresionPotenciaNoIdent;
 
-non terminal operandoNumerico;
-non terminal operandoNumericoNoIdent;
+non terminal Nodo operandoNumerico;
+non terminal Nodo operandoNumericoNoIdent;
 
-non terminal grupoReferencia;
-non terminal grupoNumerico;
+non terminal Nodo grupoReferencia;
+non terminal Nodo grupoNumerico;
 
-non terminal operadorModulo;
-non terminal operadorMultiplicativo;
-non terminal operadorSuma;
-non terminal operadorPotencia;
+non terminal Symbol operadorModulo;
+non terminal Symbol operadorMultiplicativo;
+non terminal Symbol operadorSuma;
+non terminal Symbol operadorPotencia;
 
-non terminal potenciaPositiva;
+non terminal Nodo potenciaPositiva;
 
-non terminal expresionUnaria;
-non terminal expresionNegativa;
-non terminal expresionPostfija;
-non terminal operadorPostfijo;
+non terminal Nodo expresionUnaria;
+non terminal Nodo expresionNegativa;
+non terminal Nodo expresionPostfija;
+non terminal Symbol operadorPostfijo;
 
-non terminal expresionRelacional;
+non terminal Nodo expresionRelacional;
 
-non terminal expresionRelacionNumerica;
-non terminal continuacionRelacionNumerica;
+non terminal Nodo expresionRelacionNumerica;
+non terminal Parser.Comparacion continuacionRelacionNumerica;
 
-non terminal expresionComparacionBool;
-non terminal expresionComparacionChar;
+non terminal Nodo expresionComparacionBool;
+non terminal Nodo expresionComparacionChar;
 
-non terminal operandoIgualdad;
+non terminal Nodo operandoIgualdad;
 
-non terminal operadorOrden;
-non terminal operadorComparacion;
+non terminal Symbol operadorOrden;
+non terminal Symbol operadorComparacion;
 
-non terminal expresionBool;
-non terminal literalBool;
+non terminal Nodo expresionBool;
+non terminal Nodo literalBool;
 
-non terminal grupoBooleano;
-non terminal grupoLogico;
+non terminal Nodo grupoBooleano;
+non terminal Nodo grupoLogico;
 
-non terminal expresionConjuncion;
-non terminal expresionDisyuncion;
-non terminal expresionNegacion;
+non terminal Nodo expresionConjuncion;
+non terminal Nodo expresionDisyuncion;
+non terminal Nodo expresionNegacion;
 
-non terminal expresionChar;
-non terminal expresionString;
+non terminal Nodo expresionChar;
+non terminal Nodo expresionString;
 
-non terminal literalInt;
-non terminal literalFloat;
-non terminal literalChar;
-non terminal literalString;
+non terminal Nodo literalInt;
+non terminal Nodo literalFloat;
+non terminal Nodo literalChar;
+non terminal Nodo literalString;
 
 
 /* ------------  Simbolo Inicial  ---------------- */
@@ -308,42 +339,65 @@ start with inicio;
 /* ------------  Inicio  ---------------- */
 
 inicio ::=
-    programa
+    programa:programa
+    {:
+        RESULT = programa;
+    :}
 ;
 
 
 /* ------------  Programa  ---------------- */
 
 programa ::=
-    principal
+    principal:principal
+    {:
+        RESULT = nodo(Nodo.Clase.PROGRAMA, "", principal.linea, principal.columna, principal);
+    :}
 ;
 
 programa ::=
-    listaGlobal
-    principal
+    listaGlobal:listaGlobal
+    principal:principal
+    {:
+        Nodo primero = listaGlobal.getFirst();
+        listaGlobal.addLast(principal);
+        RESULT = new Nodo(Nodo.Clase.PROGRAMA, "", primero.linea, primero.columna, listaGlobal);
+    :}
 ;
 
 
 /* ------------  Lista Global  ---------------- */
 
 listaGlobal ::=
-    elementoGlobal
+    elementoGlobal:elementoGlobal
+    {:
+        RESULT = new LinkedList<>(List.of(elementoGlobal));
+    :}
 ;
 
 listaGlobal ::=
-    elementoGlobal
-    listaGlobal
+    elementoGlobal:elementoGlobal
+    listaGlobal:listaGlobal
+    {:
+        RESULT = anteponer(elementoGlobal, listaGlobal);
+    :}
 ;
 
 
 /* ------------  ElementoGlobal  ---------------- */
 
 elementoGlobal ::=
-    declaracionVarGlobal
+    declaracionVarGlobal:declaracionVarGlobal
+    {:
+        RESULT = declaracionVarGlobal;
+    :}
 ;
 
 elementoGlobal ::=
-    funcion
+    funcion:funcion
+    {:
+        RESULT = funcion;
+    :}
 ;
 
 
@@ -351,180 +405,276 @@ elementoGlobal ::=
 /* ------------  VarGlobal  ---------------- */
 
 declaracionVarGlobal ::=
-    crearVariable
+    crearVariable:crearVariable
     DELIMITADOR
+    {:
+        RESULT = crearVariable;
+    :}
 ;
 
 declaracionVarGlobal ::=
-    crearAsignarVariable
+    crearAsignarVariable:crearAsignarVariable
     DELIMITADOR
+    {:
+        RESULT = crearAsignarVariable;
+    :}
 ;
 
 
 /* ------------  Funcion  ---------------- */
 
 funcion ::=
-    tipoRetornoFuncion
+    tipoRetornoFuncion:tipoRetornoFuncion
     IDENTIFICADOR:nombre
-    PARENTESIS_ABRE:inicioAmbito
+    PARENTESIS_ABRE:inicioScope
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
-    bloqueFuncion
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, true); :}
+    BLOQUE_ABRE:apertura
+    bloqueFuncion:bloqueFuncion
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope(String.valueOf(nombre), inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, true);
+        Nodo parametros = nodo(Nodo.Clase.PARAMETROS, "", inicioScopeleft, inicioScoperight);
+        RESULT = nodo(Nodo.Clase.FUNCION, "", tipoRetornoFuncion.linea, tipoRetornoFuncion.columna,
+                      tipoRetornoFuncion, nodo(Nodo.Clase.IDENTIFICADOR, nombre, nombreleft, nombreright),
+                      parametros, bloque(bloqueFuncion, aperturaleft, aperturaright));
+    :}
 ;
 
 funcion ::=
-    tipoRetornoFuncion
+    tipoRetornoFuncion:tipoRetornoFuncion
     IDENTIFICADOR:nombre
-    PARENTESIS_ABRE:inicioAmbito
-    listaParametros
+    PARENTESIS_ABRE:inicioScope
+    listaParametros:listaParametros
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
-    bloqueFuncion
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, true); :}
+    BLOQUE_ABRE:apertura
+    bloqueFuncion:bloqueFuncion
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope(String.valueOf(nombre), inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, true);
+        Nodo parametros = new Nodo(Nodo.Clase.PARAMETROS, "", inicioScopeleft, inicioScoperight, listaParametros);
+        RESULT = nodo(Nodo.Clase.FUNCION, "", tipoRetornoFuncion.linea, tipoRetornoFuncion.columna,
+                      tipoRetornoFuncion, nodo(Nodo.Clase.IDENTIFICADOR, nombre, nombreleft, nombreright),
+                      parametros, bloque(bloqueFuncion, aperturaleft, aperturaright));
+    :}
 ;
 
 
 /* ------------  TipoRetorno  ---------------- */
 
 tipoRetornoFuncion ::=
-    INT
+    INT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoRetornoFuncion ::=
-    FLOAT
+    FLOAT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoRetornoFuncion ::=
-    CHAR
+    CHAR:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoRetornoFuncion ::=
-    BOOL
+    BOOL:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 
 /* ------------  Tipo Parametros  ---------------- */
 
 tipoParametro ::=
-    INT
+    INT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoParametro ::=
-    FLOAT
+    FLOAT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoParametro ::=
-    BOOL
+    BOOL:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoParametro ::=
-    CHAR
+    CHAR:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoParametro ::=
-    STRING
+    STRING:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 
 /* ------------  Parametros  ---------------- */
 
 parametro ::=
-    tipoParametro
-    IDENTIFICADOR
+    tipoParametro:tipoParametro
+    IDENTIFICADOR:nombre
+    {:
+        RESULT = nodo(Nodo.Clase.PARAMETRO, "", tipoParametro.linea, tipoParametro.columna,
+                      tipoParametro, nodo(Nodo.Clase.IDENTIFICADOR, nombre, nombreleft, nombreright));
+    :}
 ;
 
 
 listaParametros ::=
-    parametro
+    parametro:parametro
+    {:
+        RESULT = new LinkedList<>(List.of(parametro));
+    :}
 ;
 
 listaParametros ::=
-    parametro
+    parametro:parametro
     COMA
-    listaParametros
+    listaParametros:listaParametros
+    {:
+        RESULT = anteponer(parametro, listaParametros);
+    :}
 ;
 
 
 /* ------------  BlqueFunc  ---------------- */
 
 bloqueFuncion ::=
-    elementoFuncion
+    elementoFuncion:elementoFuncion
+    {:
+        RESULT = new LinkedList<>(List.of(elementoFuncion));
+    :}
 ;
 
 bloqueFuncion ::=
-    elementoFuncion
-    bloqueFuncion
+    elementoFuncion:elementoFuncion
+    bloqueFuncion:bloqueFuncion
+    {:
+        RESULT = anteponer(elementoFuncion, bloqueFuncion);
+    :}
 ;
 
 elementoFuncion ::=
-    sentencia
+    sentencia:sentencia
+    {:
+        RESULT = sentencia;
+    :}
 ;
 
 elementoFuncion ::=
-    estrucControl
+    estrucControl:estrucControl
+    {:
+        RESULT = estrucControl;
+    :}
 ;
 
 elementoFuncion ::=
-    retorno
+    retorno:retorno
+    {:
+        RESULT = retorno;
+    :}
 ;
 
 
 /* ------------  Return  ---------------- */
 
 retorno ::=
-    RETURN
-    expresion
+    RETURN:palabraReturn
+    expresion:expresion
     DELIMITADOR
+    {:
+        RESULT = nodo(Nodo.Clase.RETORNO, "", palabraReturnleft, palabraReturnright, expresion);
+    :}
 ;
 
 
 /* ------------  InvocarFunc  ---------------- */
 
 invocarFuncion ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
     PARENTESIS_ABRE
     PARENTESIS_CIERRA
+    {:
+        RESULT = nodo(Nodo.Clase.LLAMADA, "", identificadorleft, identificadorright, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright));
+    :}
 ;
 
 invocarFuncion ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
     PARENTESIS_ABRE
-    listaArgumentos
+    listaArgumentos:listaArgumentos
     PARENTESIS_CIERRA
+    {:
+        listaArgumentos.addFirst(nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright));
+        RESULT = new Nodo(Nodo.Clase.LLAMADA, "", identificadorleft, identificadorright, listaArgumentos);
+    :}
 ;
 
 
 /* ------------  Argumentos  ---------------- */
 
 listaArgumentos ::=
-    argumento
+    argumento:argumento
+    {:
+        RESULT = new LinkedList<>(List.of(argumento));
+    :}
 ;
 
 listaArgumentos ::=
-    argumento
+    argumento:argumento
     COMA
-    listaArgumentos
+    listaArgumentos:listaArgumentos
+    {:
+        RESULT = anteponer(argumento, listaArgumentos);
+    :}
 ;
 
 
 argumento ::=
-    expresion
+    expresion:expresion
+    {:
+        RESULT = expresion;
+    :}
 ;
 
 
 /* ------------  ReferenciaContextual ( Hice esto para evitar problemas de ambiguiedad, relevo trabajo al semantico)  ---------------- */
 
 referenciaContextual ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:nombre
+    {:
+        RESULT = new Nodo(Nodo.Clase.IDENTIFICADOR,
+                          nombre, nombreleft, nombreright, List.of());
+    :}
 ;
 
 referenciaContextual ::=
-    invocarFuncion
+    invocarFuncion:invocarFuncion
+    {:
+        RESULT = invocarFuncion;
+    :}
 ;
 
 
@@ -533,614 +683,926 @@ referenciaContextual ::=
 principal ::=
     VOID
     MAIN:nombre
-    PARENTESIS_ABRE:inicioAmbito
+    PARENTESIS_ABRE:inicioScope
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
-    bloqueCod
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito(String.valueOf(nombre), inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, true); :}
+    BLOQUE_ABRE:apertura
+    bloqueCod:bloqueCod
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope(String.valueOf(nombre), inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, true);
+        RESULT = nodo(Nodo.Clase.PRINCIPAL, String.valueOf(nombre), nombreleft, nombreright,
+                      bloque(bloqueCod, aperturaleft, aperturaright));
+    :}
 ;
 
 
 /* ------------  BloqueCod  ---------------- */
 
 bloqueCod ::=
-    elementoBloque
+    elementoBloque:elementoBloque
+    {:
+        RESULT = new LinkedList<>(List.of(elementoBloque));
+    :}
 ;
 
 bloqueCod ::=
-    elementoBloque
-    bloqueCod
+    elementoBloque:elementoBloque
+    bloqueCod:bloqueCod
+    {:
+        RESULT = anteponer(elementoBloque, bloqueCod);
+    :}
 ;
 
 
 elementoBloque ::=
-    sentencia
+    sentencia:sentencia
+    {:
+        RESULT = sentencia;
+        RESULT = sentencia;
+    :}
 ;
 
 elementoBloque ::=
-    estrucControl
+    estrucControl:estrucControl
+    {:
+        RESULT = estrucControl;
+    :}
 ;
 
 
 /* ------------  Sentencia  ---------------- */
 
 sentencia ::=
-    crearVariable
+    crearVariable:crearVariable
     DELIMITADOR
+    {:
+        RESULT = crearVariable;
+    :}
 ;
 
 sentencia ::=
-    crearAsignarVariable
+    crearAsignarVariable:crearAsignarVariable
     DELIMITADOR
+    {:
+        RESULT = crearAsignarVariable;
+    :}
 ;
 
 sentencia ::=
-    asignarVariable
+    asignarVariable:asignarVariable
     DELIMITADOR
+    {:
+        RESULT = asignarVariable;
+    :}
 ;
 
 sentencia ::=
-    asignarElementoArreglo
+    asignarElementoArreglo:asignarElementoArreglo
     DELIMITADOR
+    {:
+        RESULT = asignarElementoArreglo;
+    :}
 ;
 
 sentencia ::=
-    entradaEst
+    entradaEst:entradaEst
     DELIMITADOR
+    {:
+        RESULT = entradaEst;
+    :}
 ;
 
 sentencia ::=
-    salidaEst
+    salidaEst:salidaEst
     DELIMITADOR
+    {:
+        RESULT = salidaEst;
+    :}
 ;
 
 sentencia ::=
-    expresion
+    expresion:expresion
     DELIMITADOR
+    {:
+        RESULT = expresion;
+    :}
 ;
 
 /* ------------  CrearVariable  ---------------- */
 
 crearVariable ::=
-    VAL
-    tipoVariable
-    IDENTIFICADOR
+    VAL:val
+    tipoVariable:tipoVariable
+    IDENTIFICADOR:identificador
+    {:
+        RESULT = nodo(Nodo.Clase.DECLARACION, "", valleft, valright, tipoVariable, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright));
+    :}
 ;
 
 
 /* ------------  tipo Variable  ---------------- */
 
 tipoVariable ::=
-    INT
+    INT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoVariable ::=
-    FLOAT
+    FLOAT:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoVariable ::=
-    BOOL
+    BOOL:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoVariable ::=
-    CHAR
+    CHAR:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 tipoVariable ::=
-    STRING
+    STRING:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.TIPO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 
 /* ------------  crearAsignarVariable  ---------------- */
 
 crearAsignarVariable ::=
-    crearVariable
+    crearVariable:crearVariable
     ASIGNACION
-    expresion
+    expresion:expresion
+    {:
+        RESULT = new Nodo(Nodo.Clase.DECLARACION, "", crearVariable.linea, crearVariable.columna,
+                          List.of(crearVariable.hijos.get(0), crearVariable.hijos.get(1), expresion));
+    :}
 ;
 
 crearAsignarVariable ::=
-    crearVariable
+    crearVariable:crearVariable
     CORCHETE_ABRE
-    tamanoArreglo
+    tamanoArreglo:tamanoArreglo
     CORCHETE_CIERRA
     ASIGNACION
-    arreglo
+    arreglo:arreglo
+    {:
+        RESULT = new Nodo(Nodo.Clase.DECLARACION_ARREGLO, "", crearVariable.linea, crearVariable.columna,
+                          List.of(crearVariable.hijos.get(0), crearVariable.hijos.get(1), tamanoArreglo, arreglo));
+    :}
 ;
 
 
 /* ------------  AsignacionVariable  ---------------- */
 
 asignarVariable ::=
-    IDENTIFICADOR
-    ASIGNACION
-    valorAsignable
+    IDENTIFICADOR:identificador
+    ASIGNACION:asignacion
+    valorAsignable:valorAsignable
+    {:
+        RESULT = nodo(Nodo.Clase.ASIGNACION, "", asignacionleft, asignacionright, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright), valorAsignable);
+    :}
 ;
 
 
 /* ------------  valorAsignable  ---------------- */
 
 valorAsignable ::=
-    expresion
+    expresion:expresion
+    {:
+        RESULT = expresion;
+    :}
 ;
 
 valorAsignable ::=
-    arreglo
+    arreglo:arreglo
+    {:
+        RESULT = arreglo;
+    :}
 ;
 
 
 /* ------------  Arreglos  ---------------- */
 
 tamanoArreglo ::=
-    literalInt
+    literalInt:literalInt
+    {:
+        RESULT = new Nodo(Nodo.Clase.TAMANO_ARREGLO, "", literalInt.linea, literalInt.columna, List.of(literalInt));
+    :}
 ;
 
 
 arreglo ::=
-    BLOQUE_ABRE
-    listaElementosArreglo
+    BLOQUE_ABRE:apertura
+    listaElementosArreglo:listaElementosArreglo
     BLOQUE_CIERRA
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_ARREGLO, "", aperturaleft, aperturaright, listaElementosArreglo);
+    :}
 ;
 
 
 listaElementosArreglo ::=
-    expresionNumerica
+    expresionNumerica:expresionNumerica
+    {:
+        RESULT = new LinkedList<>(List.of(expresionNumerica));
+    :}
 ;
 
 listaElementosArreglo ::=
-    expresionNumerica
+    expresionNumerica:expresionNumerica
     COMA
-    listaElementosArreglo
+    listaElementosArreglo:listaElementosArreglo
+    {:
+        RESULT = anteponer(expresionNumerica, listaElementosArreglo);
+    :}
 ;
 
 obtenerDatoArreglo ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
     CORCHETE_ABRE
-    expresionNumerica
+    expresionNumerica:expresionNumerica
     CORCHETE_CIERRA
+    {:
+        RESULT = nodo(Nodo.Clase.ACCESO_ARREGLO, "", identificadorleft, identificadorright, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright), expresionNumerica);
+    :}
 ;
 
 asignarElementoArreglo ::=
-    obtenerDatoArreglo
-    ASIGNACION
-    expresionNumerica
+    obtenerDatoArreglo:obtenerDatoArreglo
+    ASIGNACION:asignacion
+    expresionNumerica:expresionNumerica
+    {:
+        RESULT = nodo(Nodo.Clase.ASIGNACION, "", asignacionleft, asignacionright, obtenerDatoArreglo, expresionNumerica);
+    :}
 ;
 
 
 /* ------------  Read  ---------------- */
 
 entradaEst ::=
-    READ
+    READ:read
     PARENTESIS_ABRE
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
     PARENTESIS_CIERRA
+    {:
+        RESULT = nodo(Nodo.Clase.READ, "", readleft, readright, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright));
+    :}
 ;
 
 
 /* ------------  Write  ---------------- */
 
 salidaEst ::=
-    WRITE
+    WRITE:write
     PARENTESIS_ABRE
-    datoSalida
+    datoSalida:datoSalida
     PARENTESIS_CIERRA
+    {:
+        RESULT = nodo(Nodo.Clase.WRITE, "", writeleft, writeright, datoSalida);
+    :}
 ;
 
 datoSalida ::=
-    literalString
+    literalString:literalString
+    {:
+        RESULT = literalString;
+    :}
 ;
 
 datoSalida ::=
-    literalInt
+    literalInt:literalInt
+    {:
+        RESULT = literalInt;
+    :}
 ;
 
 datoSalida ::=
-    literalBool
+    literalBool:literalBool
+    {:
+        RESULT = literalBool;
+    :}
 ;
 
 datoSalida ::=
-    literalFloat
+    literalFloat:literalFloat
+    {:
+        RESULT = literalFloat;
+    :}
 ;
 
 datoSalida ::=
-    expresionNegativa
+    expresionNegativa:expresionNegativa
+    {:
+        RESULT = expresionNegativa;
+    :}
 ;
 
 datoSalida ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
+    {:
+        RESULT = nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright);
+    :}
 ;
 
 
 /* ------------   Estructura Control  ---------------- */
 
 estrucControl ::=
-    estructuraIf
+    estructuraIf:estructuraIf
+    {:
+        RESULT = estructuraIf;
+    :}
 ;
 
 estrucControl ::=
-    estructuraWhile
+    estructuraWhile:estructuraWhile
+    {:
+        RESULT = estructuraWhile;
+    :}
 ;
 
 estrucControl ::=
-    estructuraFor
+    estructuraFor:estructuraFor
+    {:
+        RESULT = estructuraFor;
+    :}
 ;
 
 
 /* ------------  Condicion  ---------------- */
 
 condicion ::=
-    expresionBool
+    expresionBool:expresionBool
+    {:
+        RESULT = expresionBool;
+    :}
 ;
 
 condicion ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 /* ------------  IF  ---------------- */
 
 estructuraIf ::=
-    IF
+    IF:palabraIf
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope("if", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.IF, "if", palabraIfleft, palabraIfright, condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight));
+    :}
 ;
 
 estructuraIf ::=
-    IF
+    IF:palabraIf
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    listaElif
-    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    listaElif:listaElif
+    {:
+        parser.registrarScope("if", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        List<Nodo> hijos = new ArrayList<>(List.of(condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight)));
+        hijos.addAll(listaElif);
+        RESULT = new Nodo(Nodo.Clase.IF, "if", palabraIfleft, palabraIfright, hijos);
+    :}
 ;
 
 estructuraIf ::=
-    IF
+    IF:palabraIf
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    estructuraElse
-    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    estructuraElse:estructuraElse
+    {:
+        parser.registrarScope("if", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.IF, "if", palabraIfleft, palabraIfright, condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight), estructuraElse);
+    :}
 ;
 
 
 /* if + elif + else */
 
 estructuraIf ::=
-    IF
+    IF:palabraIf
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    listaElif
-    estructuraElse
-    {: parser.registrarAmbito("if", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    listaElif:listaElif
+    estructuraElse:estructuraElse
+    {:
+        parser.registrarScope("if", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        List<Nodo> hijos = new ArrayList<>(List.of(condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight)));
+        hijos.addAll(listaElif);
+        hijos.add(estructuraElse);
+        RESULT = new Nodo(Nodo.Clase.IF, "if", palabraIfleft, palabraIfright, hijos);
+    :}
 ;
 
 listaElif ::=
-    estructuraElif
+    estructuraElif:estructuraElif
+    {:
+        RESULT = new LinkedList<>(List.of(estructuraElif));
+    :}
 ;
 
 listaElif ::=
-    estructuraElif
-    listaElif
+    estructuraElif:estructuraElif
+    listaElif:listaElif
+    {:
+        RESULT = anteponer(estructuraElif, listaElif);
+    :}
 ;
 
 
 estructuraElif ::=
-    ELIF
+    ELIF:palabraElif
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito("elif", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope("elif", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.ELIF, "elif", palabraElifleft, palabraElifright, condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight));
+    :}
 ;
 
 estructuraElse ::=
-    ELSE
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito("else", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    ELSE:palabraElse
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope("else", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.ELSE, "else", palabraElseleft, palabraElseright, bloque(bloqueControl, inicioScopeleft, inicioScoperight));
+    :}
 ;
 
 
 /* ------------  While  ---------------- */
 
 estructuraWhile ::=
-    WHILE
+    WHILE:palabraWhile
     PARENTESIS_ABRE
-    condicion
+    condicion:condicion
     PARENTESIS_CIERRA
-    BLOQUE_ABRE:inicioAmbito
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito("while", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:inicioScope
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope("while", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.WHILE, "while", palabraWhileleft, palabraWhileright, condicion, bloque(bloqueControl, inicioScopeleft, inicioScoperight));
+    :}
 ;
 
 
 /* ------------  For  ---------------- */
 
 estructuraFor ::=
-    FOR
-    PARENTESIS_ABRE:inicioAmbito
-    inicializacionFor
+    FOR:palabraFor
+    PARENTESIS_ABRE:inicioScope
+    inicializacionFor:inicializacionFor
     COMA
-    condicion
+    condicion:condicion
     COMA
-    actualizacionFor
+    actualizacionFor:actualizacionFor
     PARENTESIS_CIERRA
-    BLOQUE_ABRE
-    bloqueControl
-    BLOQUE_CIERRA:finAmbito
-    {: parser.registrarAmbito("for", inicioAmbitoleft, inicioAmbitoright,
-                              finAmbitoleft, finAmbitoright, false); :}
+    BLOQUE_ABRE:aperturaBloque
+    bloqueControl:bloqueControl
+    BLOQUE_CIERRA:finScope
+    {:
+        parser.registrarScope("for", inicioScopeleft, inicioScoperight,
+                              finScopeleft, finScoperight, false);
+        RESULT = nodo(Nodo.Clase.FOR, "for", palabraForleft, palabraForright, inicializacionFor, condicion, actualizacionFor, bloque(bloqueControl, aperturaBloqueleft, aperturaBloqueright));
+    :}
 ;
 
 inicializacionFor ::=
-    crearAsignarVariable
+    crearAsignarVariable:crearAsignarVariable
+    {:
+        RESULT = crearAsignarVariable;
+    :}
 ;
 
 inicializacionFor ::=
-    asignarVariable
+    asignarVariable:asignarVariable
+    {:
+        RESULT = asignarVariable;
+    :}
 ;
 
 inicializacionFor ::=
-    IDENTIFICADOR
+    IDENTIFICADOR:identificador
+    {:
+        RESULT = nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright);
+    :}
 ;
 
 actualizacionFor ::=
-    expresionNumerica
+    expresionNumerica:expresionNumerica
+    {:
+        RESULT = expresionNumerica;
+    :}
 ;
 
 
 /* ------------  Bloque Control  ---------------- */
 
 bloqueControl ::=
-    elementoControl
+    elementoControl:elementoControl
+    {:
+        RESULT = new LinkedList<>(List.of(elementoControl));
+    :}
 ;
 
 bloqueControl ::=
-    elementoControl
-    bloqueControl
+    elementoControl:elementoControl
+    bloqueControl:bloqueControl
+    {:
+        RESULT = anteponer(elementoControl, bloqueControl);
+    :}
 ;
 
 
 elementoControl ::=
-    sentencia
+    sentencia:sentencia
+    {:
+        RESULT = sentencia;
+    :}
 ;
 
 elementoControl ::=
-    estrucControl
+    estrucControl:estrucControl
+    {:
+        RESULT = estrucControl;
+    :}
 ;
 
 elementoControl ::=
-    retorno
+    retorno:retorno
+    {:
+        RESULT = retorno;
+    :}
 ;
 
 elementoControl ::=
-    sentenciaBreak
+    sentenciaBreak:sentenciaBreak
+    {:
+        RESULT = sentenciaBreak;
+    :}
 ;
 
 
 /* ------------  Break  ---------------- */
 
 sentenciaBreak ::=
-    BREAK
+    BREAK:palabraBreak
     DELIMITADOR
+    {:
+        RESULT = nodo(Nodo.Clase.BREAK, "", palabraBreakleft, palabraBreakright);
+    :}
 ;
 
 
 /* ------------  Expresion  ---------------- */
 
 expresion ::=
-    expresionNumerica
+    expresionNumerica:expresionNumerica
+    {:
+        RESULT = expresionNumerica;
+    :}
 ;
 
 expresion ::=
-    expresionBool
+    expresionBool:expresionBool
+    {:
+        RESULT = expresionBool;
+    :}
 ;
 
 expresion ::=
-    expresionChar
+    expresionChar:expresionChar
+    {:
+        RESULT = expresionChar;
+    :}
 ;
 
 expresion ::=
-    expresionString
+    expresionString:expresionString
+    {:
+        RESULT = expresionString;
+    :}
 ;
 
 
 /* ------------  Numerica  ---------------- */
 
 expresionNumerica ::=
-    expresionModulo
+    expresionModulo:expresionModulo
+    {:
+        RESULT = expresionModulo;
+    :}
 ;
 
 
 expresionNumericaNoIdent ::=
-    expresionModuloNoIdent
+    expresionModuloNoIdent:expresionModuloNoIdent
+    {:
+        RESULT = expresionModuloNoIdent;
+    :}
 ;
 
 
 /* ------------  Modulo  ---------------- */
 
 expresionModulo ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 expresionModulo ::=
-    expresionModuloNoIdent
+    expresionModuloNoIdent:expresionModuloNoIdent
+    {:
+        RESULT = expresionModuloNoIdent;
+    :}
 ;
 
 
 expresionModuloNoIdent ::=
-    expresionMultiplicativaNoIdent
+    expresionMultiplicativaNoIdent:expresionMultiplicativaNoIdent
+    {:
+        RESULT = expresionMultiplicativaNoIdent;
+    :}
 ;
 
 expresionModuloNoIdent ::=
-    expresionModulo
-    operadorModulo
-    expresionMultiplicativa
+    expresionModulo:expresionModulo
+    operadorModulo:operadorModulo
+    expresionMultiplicativa:expresionMultiplicativa
+    {:
+        RESULT = binaria(operadorModulo, expresionModulo, expresionMultiplicativa);
+    :}
 ;
 
 
 operadorModulo ::=
-    MODULO
+    MODULO:operador
+    {:
+        RESULT = new Symbol(sym.MODULO, operadorleft, operadorright, operador);
+    :}
 ;
 
 
 /* ------------  Multi/Div  ---------------- */
 
 expresionMultiplicativa ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 expresionMultiplicativa ::=
-    expresionMultiplicativaNoIdent
+    expresionMultiplicativaNoIdent:expresionMultiplicativaNoIdent
+    {:
+        RESULT = expresionMultiplicativaNoIdent;
+    :}
 ;
 
 
 expresionMultiplicativaNoIdent ::=
-    expresionSumaNoIdent
+    expresionSumaNoIdent:expresionSumaNoIdent
+    {:
+        RESULT = expresionSumaNoIdent;
+    :}
 ;
 
 expresionMultiplicativaNoIdent ::=
-    expresionMultiplicativa
-    operadorMultiplicativo
-    expresionSuma
+    expresionMultiplicativa:expresionMultiplicativa
+    operadorMultiplicativo:operadorMultiplicativo
+    expresionSuma:expresionSuma
+    {:
+        RESULT = binaria(operadorMultiplicativo, expresionMultiplicativa, expresionSuma);
+    :}
 ;
 
 
 operadorMultiplicativo ::=
-    MULTIPLICACION
+    MULTIPLICACION:operador
+    {:
+        RESULT = new Symbol(sym.MULTIPLICACION, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorMultiplicativo ::=
-    DIVISION
+    DIVISION:operador
+    {:
+        RESULT = new Symbol(sym.DIVISION, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorMultiplicativo ::=
-    DIVISION_ENTERA
+    DIVISION_ENTERA:operador
+    {:
+        RESULT = new Symbol(sym.DIVISION_ENTERA, operadorleft, operadorright, operador);
+    :}
 ;
 
 
 /* ------------  Suma/resta  ---------------- */
 
 expresionSuma ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 expresionSuma ::=
-    expresionSumaNoIdent
+    expresionSumaNoIdent:expresionSumaNoIdent
+    {:
+        RESULT = expresionSumaNoIdent;
+    :}
 ;
 
 
 expresionSumaNoIdent ::=
-    expresionPotenciaNoIdent
+    expresionPotenciaNoIdent:expresionPotenciaNoIdent
+    {:
+        RESULT = expresionPotenciaNoIdent;
+    :}
 ;
 
 expresionSumaNoIdent ::=
-    expresionSuma
-    operadorSuma
-    expresionPotencia
+    expresionSuma:expresionSuma
+    operadorSuma:operadorSuma
+    expresionPotencia:expresionPotencia
+    {:
+        RESULT = binaria(operadorSuma, expresionSuma, expresionPotencia);
+    :}
 ;
 
 
 operadorSuma ::=
-    MAS
+    MAS:operador
+    {:
+        RESULT = new Symbol(sym.MAS, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorSuma ::=
-    MENOS
+    MENOS:operador
+    {:
+        RESULT = new Symbol(sym.MENOS, operadorleft, operadorright, operador);
+    :}
 ;
 
 
 /* ------------  Potencia  ---------------- */
 
 expresionPotencia ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 expresionPotencia ::=
-    expresionPotenciaNoIdent
+    expresionPotenciaNoIdent:expresionPotenciaNoIdent
+    {:
+        RESULT = expresionPotenciaNoIdent;
+    :}
 ;
 
 
 expresionPotenciaNoIdent ::=
-    operandoNumericoNoIdent
+    operandoNumericoNoIdent:operandoNumericoNoIdent
+    {:
+        RESULT = operandoNumericoNoIdent;
+    :}
 ;
 
 expresionPotenciaNoIdent ::=
-    operandoNumerico
-    operadorPotencia
-    potenciaPositiva
+    operandoNumerico:operandoNumerico
+    operadorPotencia:operadorPotencia
+    potenciaPositiva:potenciaPositiva
+    {:
+        RESULT = binaria(operadorPotencia, operandoNumerico, potenciaPositiva);
+    :}
 ;
 
 operadorPotencia ::=
-    POTENCIA
+    POTENCIA:operador
+    {:
+        RESULT = new Symbol(sym.POTENCIA, operadorleft, operadorright, operador);
+    :}
 ;
 
 potenciaPositiva ::=
-    ENTERO_POSITIVO
+    ENTERO_POSITIVO:lexema
+    {:
+        RESULT = nodo(Nodo.Clase.LITERAL_ENTERO, lexema, lexemaleft, lexemaright);
+    :}
 ;
 
 
 /* ------------  op Numerico  ---------------- */
 
 operandoNumerico ::=
-    referenciaContextual
+    referenciaContextual:referenciaContextual
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 operandoNumerico ::=
-    operandoNumericoNoIdent
+    operandoNumericoNoIdent:operandoNumericoNoIdent
+    {:
+        RESULT = operandoNumericoNoIdent;
+    :}
 ;
 
 
 operandoNumericoNoIdent ::=
-    literalInt
+    literalInt:literalInt
+    {:
+        RESULT = literalInt;
+    :}
 ;
 
 operandoNumericoNoIdent ::=
-    literalFloat
+    literalFloat:literalFloat
+    {:
+        RESULT = literalFloat;
+    :}
 ;
 
 operandoNumericoNoIdent ::=
-    expresionUnaria
+    expresionUnaria:expresionUnaria
+    {:
+        RESULT = expresionUnaria;
+    :}
 ;
 
 operandoNumericoNoIdent ::=
-    grupoReferencia
+    grupoReferencia:grupoReferencia
+    {:
+        RESULT = grupoReferencia;
+    :}
 ;
 
 operandoNumericoNoIdent ::=
-    grupoNumerico
+    grupoNumerico:grupoNumerico
+    {:
+        RESULT = grupoNumerico;
+    :}
 ;
 
 operandoNumericoNoIdent ::=
-    obtenerDatoArreglo
+    obtenerDatoArreglo:obtenerDatoArreglo
+    {:
+        RESULT = obtenerDatoArreglo;
+    :}
 ;
 
 
@@ -1148,8 +1610,11 @@ operandoNumericoNoIdent ::=
 
 grupoReferencia ::=
     PARENTESIS_ABRE
-    referenciaContextual
+    referenciaContextual:referenciaContextual
     PARENTESIS_CIERRA
+    {:
+        RESULT = referenciaContextual;
+    :}
 ;
 
 
@@ -1157,63 +1622,96 @@ grupoReferencia ::=
 
 grupoNumerico ::=
     PARENTESIS_ABRE
-    expresionNumericaNoIdent
+    expresionNumericaNoIdent:expresionNumericaNoIdent
     PARENTESIS_CIERRA
+    {:
+        RESULT = expresionNumericaNoIdent;
+    :}
 ;
 
 
 /* ------------  Unarias  ---------------- */
 
 expresionUnaria ::=
-    expresionNegativa
+    expresionNegativa:expresionNegativa
+    {:
+        RESULT = expresionNegativa;
+    :}
 ;
 
 expresionUnaria ::=
-    expresionPostfija
+    expresionPostfija:expresionPostfija
+    {:
+        RESULT = expresionPostfija;
+    :}
 ;
 
 /* ------------  Negativo  ---------------- */
 
 expresionNegativa ::=
-    MENOS
-    literalInt
+    MENOS:operador
+    literalInt:literalInt
+    {:
+        RESULT = nodo(Nodo.Clase.OPERACION_UNARIA, operador, operadorleft, operadorright, literalInt);
+    :}
 ;
 
 expresionNegativa ::=
-    MENOS
-    literalFloat
+    MENOS:operador
+    literalFloat:literalFloat
+    {:
+        RESULT = nodo(Nodo.Clase.OPERACION_UNARIA, operador, operadorleft, operadorright, literalFloat);
+    :}
 ;
 
 
 /* ------------  Incremento/ decremento  ---------------- */
 
 expresionPostfija ::=
-    IDENTIFICADOR
-    operadorPostfijo
+    IDENTIFICADOR:identificador
+    operadorPostfijo:operadorPostfijo
+    {:
+        RESULT = nodo(Nodo.Clase.OPERACION_UNARIA, (String) operadorPostfijo.value, operadorPostfijo.left, operadorPostfijo.right, nodo(Nodo.Clase.IDENTIFICADOR, identificador, identificadorleft, identificadorright));
+    :}
 ;
 
 
 operadorPostfijo ::=
-    INCREMENTO
+    INCREMENTO:operador
+    {:
+        RESULT = new Symbol(sym.INCREMENTO, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorPostfijo ::=
-    DECREMENTO
+    DECREMENTO:operador
+    {:
+        RESULT = new Symbol(sym.DECREMENTO, operadorleft, operadorright, operador);
+    :}
 ;
 
 
 /* ------------  exp Rel  ---------------- */
 
 expresionRelacional ::=
-    expresionRelacionNumerica
+    expresionRelacionNumerica:expresionRelacionNumerica
+    {:
+        RESULT = expresionRelacionNumerica;
+    :}
 ;
 
 expresionRelacional ::=
-    expresionComparacionBool
+    expresionComparacionBool:expresionComparacionBool
+    {:
+        RESULT = expresionComparacionBool;
+    :}
 ;
 
 expresionRelacional ::=
-    expresionComparacionChar
+    expresionComparacionChar:expresionComparacionChar
+    {:
+        RESULT = expresionComparacionChar;
+    :}
 ;
 
 
@@ -1221,42 +1719,63 @@ expresionRelacional ::=
 
 expresionRelacionNumerica ::=
     CORCHETE_ABRE
-    expresionNumerica
+    expresionNumerica:expresionNumerica
     CORCHETE_CIERRA
-    continuacionRelacionNumerica
+    continuacionRelacionNumerica:continuacionRelacionNumerica
+    {:
+        RESULT = binaria(continuacionRelacionNumerica.operador, expresionNumerica, continuacionRelacionNumerica.derecha);
+    :}
 ;
 
 continuacionRelacionNumerica ::=
-    operadorOrden
+    operadorOrden:operadorOrden
     CORCHETE_ABRE
-    expresionNumerica
+    expresionNumerica:expresionNumerica
     CORCHETE_CIERRA
+    {:
+        RESULT = new Parser.Comparacion(operadorOrden, expresionNumerica);
+    :}
 ;
 
 continuacionRelacionNumerica ::=
-    operadorComparacion
+    operadorComparacion:operadorComparacion
     CORCHETE_ABRE
-    operandoIgualdad
+    operandoIgualdad:operandoIgualdad
     CORCHETE_CIERRA
+    {:
+        RESULT = new Parser.Comparacion(operadorComparacion, operandoIgualdad);
+    :}
 ;
 
 
 /* ------------  Logica  ---------------- */
 
 operadorOrden ::=
-    MENOR
+    MENOR:operador
+    {:
+        RESULT = new Symbol(sym.MENOR, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorOrden ::=
-    MENOR_IGUAL
+    MENOR_IGUAL:operador
+    {:
+        RESULT = new Symbol(sym.MENOR_IGUAL, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorOrden ::=
-    MAYOR
+    MAYOR:operador
+    {:
+        RESULT = new Symbol(sym.MAYOR, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorOrden ::=
-    MAYOR_IGUAL
+    MAYOR_IGUAL:operador
+    {:
+        RESULT = new Symbol(sym.MAYOR_IGUAL, operadorleft, operadorright, operador);
+    :}
 ;
 
 
@@ -1264,12 +1783,15 @@ operadorOrden ::=
 
 expresionComparacionBool ::=
     CORCHETE_ABRE
-    expresionBool
+    expresionBool:expresionBool
     CORCHETE_CIERRA
-    operadorComparacion
+    operadorComparacion:operadorComparacion
     CORCHETE_ABRE
-    operandoIgualdad
+    operandoIgualdad:operandoIgualdad
     CORCHETE_CIERRA
+    {:
+        RESULT = binaria(operadorComparacion, expresionBool, operandoIgualdad);
+    :}
 ;
 
 
@@ -1277,63 +1799,99 @@ expresionComparacionBool ::=
 
 expresionComparacionChar ::=
     CORCHETE_ABRE
-    expresionChar
+    expresionChar:expresionChar
     CORCHETE_CIERRA
-    operadorComparacion
+    operadorComparacion:operadorComparacion
     CORCHETE_ABRE
-    operandoIgualdad
+    operandoIgualdad:operandoIgualdad
     CORCHETE_CIERRA
+    {:
+        RESULT = binaria(operadorComparacion, expresionChar, operandoIgualdad);
+    :}
 ;
 
 
 /* ------------  Operando Igualdad  ---------------- */
 
 operandoIgualdad ::=
-    expresionNumerica
+    expresionNumerica:expresionNumerica
+    {:
+        RESULT = expresionNumerica;
+    :}
 ;
 
 operandoIgualdad ::=
-    expresionBool
+    expresionBool:expresionBool
+    {:
+        RESULT = expresionBool;
+    :}
 ;
 
 operandoIgualdad ::=
-    expresionChar
+    expresionChar:expresionChar
+    {:
+        RESULT = expresionChar;
+    :}
 ;
 
 
 operadorComparacion ::=
-    IGUAL
+    IGUAL:operador
+    {:
+        RESULT = new Symbol(sym.IGUAL, operadorleft, operadorright, operador);
+    :}
 ;
 
 operadorComparacion ::=
-    DIFERENTE
+    DIFERENTE:operador
+    {:
+        RESULT = new Symbol(sym.DIFERENTE, operadorleft, operadorright, operador);
+    :}
 ;
 
 
 /* ------------  expr Bool  ---------------- */
 
 expresionBool ::=
-    literalBool
+    literalBool:literalBool
+    {:
+        RESULT = literalBool;
+    :}
 ;
 
 expresionBool ::=
-    grupoBooleano
+    grupoBooleano:grupoBooleano
+    {:
+        RESULT = grupoBooleano;
+    :}
 ;
 
 expresionBool ::=
-    expresionRelacional
+    expresionRelacional:expresionRelacional
+    {:
+        RESULT = expresionRelacional;
+    :}
 ;
 
 expresionBool ::=
-    expresionConjuncion
+    expresionConjuncion:expresionConjuncion
+    {:
+        RESULT = expresionConjuncion;
+    :}
 ;
 
 expresionBool ::=
-    expresionDisyuncion
+    expresionDisyuncion:expresionDisyuncion
+    {:
+        RESULT = expresionDisyuncion;
+    :}
 ;
 
 expresionBool ::=
-    expresionNegacion
+    expresionNegacion:expresionNegacion
+    {:
+        RESULT = expresionNegacion;
+    :}
 ;
 
 
@@ -1341,125 +1899,218 @@ expresionBool ::=
 
 grupoBooleano ::=
     PARENTESIS_ABRE
-    expresionBool
+    expresionBool:expresionBool
     PARENTESIS_CIERRA
+    {:
+        RESULT = expresionBool;
+    :}
 ;
 
 
 /* ------------  Grupo Logico  ---------------- */
 
 grupoLogico ::=
-    grupoBooleano
+    grupoBooleano:grupoBooleano
+    {:
+        RESULT = grupoBooleano;
+    :}
 ;
 
 grupoLogico ::=
-    grupoReferencia
+    grupoReferencia:grupoReferencia
+    {:
+        RESULT = grupoReferencia;
+    :}
 ;
 
 
 /* ------------  Conjuncion  ---------------- */
 
 expresionConjuncion ::=
-    grupoLogico
-    CONJUNCION
-    grupoLogico
+    grupoLogico:izquierda
+    CONJUNCION:operador
+    grupoLogico:derecha
+    {:
+        RESULT = binaria(new Symbol(sym.CONJUNCION, operadorleft, operadorright, operador), izquierda, derecha);
+    :}
 ;
 
 
 /* ------------  Disyuncion  ---------------- */
 
 expresionDisyuncion ::=
-    grupoLogico
-    DISYUNCION
-    grupoLogico
+    grupoLogico:izquierda
+    DISYUNCION:operador
+    grupoLogico:derecha
+    {:
+        RESULT = binaria(new Symbol(sym.DISYUNCION, operadorleft, operadorright, operador), izquierda, derecha);
+    :}
 ;
 
 
 /* ------------  Negacion  ---------------- */
 
 expresionNegacion ::=
-    NEGACION
-    grupoLogico
+    NEGACION:operador
+    grupoLogico:grupoLogico
+    {:
+        RESULT = nodo(Nodo.Clase.OPERACION_UNARIA, operador, operadorleft, operadorright, grupoLogico);
+    :}
 ;
 
 
 /* ------------  char  ---------------- */
 
 expresionChar ::=
-    literalChar
+    literalChar:literalChar
+    {:
+        RESULT = literalChar;
+    :}
 ;
 
 
 /* ------------  string  ---------------- */
 
 expresionString ::=
-    literalString
+    literalString:literalString
+    {:
+        RESULT = literalString;
+    :}
 ;
 
 
 /* ------------  literal int  ---------------- */
 
 literalInt ::=
-    CERO
+    CERO:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_ENTERO,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 literalInt ::=
-    ENTERO_POSITIVO
+    ENTERO_POSITIVO:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_ENTERO,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 
 /* ------------  literal float  ---------------- */
 
 literalFloat ::=
-    LITERAL_FLOAT
+    LITERAL_FLOAT:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_FLOTANTE,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 
 /* ------------  literal bool  ---------------- */
 
 literalBool ::=
-    TRUE
+    TRUE:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_BOOLEANO,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 literalBool ::=
-    FALSE
+    FALSE:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_BOOLEANO,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 
 /* ------------  literal char  ---------------- */
 
 literalChar ::=
-    LITERAL_CHAR
+    LITERAL_CHAR:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_CHAR,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 
 /* ------------  literal String  ---------------- */
 
 literalString ::=
-    LITERAL_STRING
+    LITERAL_STRING:lexema
+    {:
+        RESULT = new Nodo(Nodo.Clase.LITERAL_CADENA,
+                          lexema, lexemaleft, lexemaright, List.of());
+    :}
 ;
 
 /* ------------  Errores, estados de sincronizacion  ---------------- */
 
 
-sentencia ::= error DELIMITADOR;
+sentencia ::=
+    error:falla
+    DELIMITADOR
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
-declaracionVarGlobal ::= error DELIMITADOR;
+declaracionVarGlobal ::=
+    error:falla
+    DELIMITADOR
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
-condicion ::= error;
+condicion ::=
+    error:falla
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
-parametro ::= error;
+parametro ::=
+    error:falla
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
-argumento ::= error;
+argumento ::=
+    error:falla
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
-inicializacionFor ::= error;
-actualizacionFor  ::= error;
+inicializacionFor ::=
+    error:falla
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
+actualizacionFor ::=
+    error:falla
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, "", fallaleft, fallaright);
+    :}
+;
 
 
 obtenerDatoArreglo ::=
-    IDENTIFICADOR CORCHETE_ABRE error CORCHETE_CIERRA;
+    IDENTIFICADOR:identificador CORCHETE_ABRE error CORCHETE_CIERRA
+    {:
+        RESULT = nodo(Nodo.Clase.ERROR, identificador, identificadorleft, identificadorright);
+    :}
+;
