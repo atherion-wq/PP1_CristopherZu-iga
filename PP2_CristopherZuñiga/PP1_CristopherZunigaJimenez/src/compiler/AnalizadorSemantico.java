@@ -417,7 +417,12 @@ public final class AnalizadorSemantico {
             case "/":
                 if (esNumerico(izquierdo) && esNumerico(derecho)) {
                     if (expresion.texto.equals("/")) {
-                        return "float";
+                        if (izquierdo.equals("float") && derecho.equals("float") ){
+                            return "float";
+                        }
+                        error (expresion, "Division simple ocupa dos valores float");
+                        return null;
+
                     }
                     return izquierdo.equals("float") || derecho.equals("float") ? "float" : "int";
                 }

@@ -1,44 +1,85 @@
-val int datosʃ:4:ʅ Ͱ ¿:2,4,6,8:?»
-val int base Ͱ 2»
 
-int ajustar є: int valor :э ¿:
-    if є: ʃ:valor:ʅ >= ʃ:6:ʅ :э ¿:
-        return valor + base»
-    :? elif є: ʃ:valor:ʅ == ʃ:4:ʅ :э ¿:
-        return valor pot 2»
-    :? else ¿:
-        return valor mod 3»
-    :?
-:?
+val int numero»
+val int g»
+val float ff»
+ float func1 є: char x22,char x23 :э  ¿:
+	val string sssͰ"Hola"»
+	numero Ͱ 20 + 21» val char letraͰ'a'» val float h»
+	g Ͱ numero++ * 10 + 24 // 44 pot 88 mod numero--»
+	h Ͱ 4.4 * func1 є:letra,'b':э / 9.9 - 6.7»
+	write є: numero :э »
+	ff Ͱ-0.01»
+	val char _miChar_Ͱ'!' »
+	val int _x30_Ͱ-1»
+	val bool _x40_Ͱfalse»
+	val int _x50_ʃ:2:ʅ Ͱ ¿:4,5:?»
+	_x50_ʃ:1+0:ʅ Ͱ -9999»
+	val float _x502_ʃ:4:ʅ Ͱ ¿:5.5,6.4,7.7,8.8:?»
+	write є: "1****" :э »
+	ff Ͱ _x502_ʃ:_x30_ - 2:ʅ * func1 є:letra,'c':э»
+	val string _x503_Ͱ"Hola a todos los que estʃ:a:ʅ haciendo un compilador nuevo¿:n"»
+	write є: _x503_ :э »
+	if є: є:ʃ:numero:ʅ<=ʃ:45:ʅ:э λ є:ʃ:ff:ʅ>ʃ:5.6:ʅ:э :э  ¿:
+		val int y1»
+		write є: "2****" :э »
+		if є: Σ є: є:ʃ:ff:ʅ>ʃ:5.6:ʅ:э θ є:ʃ:numero:ʅ>ʃ:45:ʅ:э :э:э  ¿: 
+			val int y»
+			val char ch33Ͱ'a'»
+			write є: "22****22" :э »
+		:?
+		write є: "2****" :э »
+		val char ch33Ͱ'a'»
+	 :?
+	elif є: ʃ:44.55:ʅ < ʃ:ff:ʅ:э ¿: 
+		write є: "3****" :э »
+		val int y2Ͱ45»
+		val string str2Ͱ"dddfffddd"»
+		while є:є:false:э λ є:_x40_:э:э  ¿: 
+			write є: _x503_ :э »
+			write є: "4!!!!!!!!!!!!!!!!!" :э »
+				for є:val int numSS Ͱ 0 , ʃ:numSS:ʅ<ʃ:7:ʅ , numSS++:э¿:
+					writeє:numSS:э»
+				:?
+			write є: "4!!!!!!!!!!!!!!!!!" :э »
+		
+		:?
+		write є: "3****" :э »
+	 :?
+	 else
+	 ¿:
+		write є: "4****" :э »
+	 :?
+	 if є: ʃ:444.555:ʅ < ʃ:ff:ʅ:э¿:
+		write є: "5****" :э »
+	 :?
+	 else
+	 ¿:
+		write є: "6****" :э »
+	 :?
+	
+	write є: "Hola mundo" :э »
+	return -5.6 / ff * func1 є:letra,'d':э»
+ :?  
 
-float promedio є: int suma, int cantidad :э ¿:
-    return suma / cantidad»
-:?
+ int _func2_  є: float _b1_, int _i1_ :э   ¿: 
+	val int j » 
+	return _i1_»
+  :?  
 
-void principal є: :э ¿:
-    val int limite»
-    read є:limite:э»
-    val int total Ͱ 0»
-    val int procesados Ͱ 0»
+bool _func3_  є:  :э   ¿: 
+	val string _b1_»
+	return true» 
+  :?
+ 
 
-    for є: val int i Ͱ 0, ʃ:i:ʅ < ʃ:4:ʅ, i++ :э ¿:
-        while є: ʃ:datosʃ:i:ʅ:ʅ > ʃ:limite:ʅ :э ¿:
-            datosʃ:i:ʅ Ͱ datosʃ:i:ʅ - 1»
-            break»
-        :?
+void principal є::э  ¿: 
 
-        datosʃ:i:ʅ Ͱ ajustarє:datosʃ:i:ʅ:э»
-        total Ͱ total + datosʃ:i:ʅ»
-        procesados++»
+	val char miCharͰ'!'»
+	val string str1Ͱ"Mi string 1"»
+	val float fl1Ͱ56.6»
+	val int in1Ͱ10»
+	val bool bl0 Ͱ ʃ:6.7:ʅ != ʃ:8.9:ʅ» 
+	val int _x50_ʃ:2:ʅ Ͱ ¿:4,5:?»
+	in1 Ͱ 0 + _func2_ є: func1є:miChar,'e':э * 5.5 , in1 // _x50_ʃ:0:ʅ :э + 0 »
 
-        if є: є:ʃ:total:ʅ > ʃ:20:ʅ:э λ є:Σ є:false:э:э :э ¿:
-            break»
-        :?
-    :?
-
-    val float media Ͱ promedioє:total, procesados:э»
-    val float muestra Ͱ promedioє:ajustarє:4:э, 2:э»
-    write є:"Promedio":э»
-    write є:media:э»
-    write є:muestra:э»
-:?
+ :? 

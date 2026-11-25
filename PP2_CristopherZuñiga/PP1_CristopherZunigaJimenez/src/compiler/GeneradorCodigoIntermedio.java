@@ -12,13 +12,14 @@ public final class GeneradorCodigoIntermedio {
     private final Deque<Map<String, String>> scopes = new ArrayDeque<>();
     private final Map<String, Integer> declaracionesPorNombre = new HashMap<>();
     private final Map<String, String> capacidadesArreglos = new HashMap<>();
+    private final Map<String, Nodo> funciones = new HashMap<>();
     private final Deque<String> salidasCiclos = new ArrayDeque<>();
     private int contadorTemporales;
     private int contadorEtiquetas;
     private int contadorInicioWhile;
     private int contadorSalidaWhile;
-    private int contadorInicioFor;
-    private int contadorSalidaFor;
+    private int contadorFor;
+    private String funcionActual;
 
     private GeneradorCodigoIntermedio() {
         scopes.push(new HashMap<>());
@@ -26,6 +27,11 @@ public final class GeneradorCodigoIntermedio {
 
     public static List<String> generar(Nodo programa) {
         GeneradorCodigoIntermedio generador = new GeneradorCodigoIntermedio();
+        for (Nodo hijo : programa.hijos) {
+            if (hijo.clase == Nodo.Clase.FUNCION) {
+                generador.funciones.put(hijo.hijos.get(1).texto, hijo);
+            }
+        }
         generador.generarSentencia(programa);
         return List.copyOf(generador.instrucciones);
     }
@@ -36,9 +42,15 @@ public final class GeneradorCodigoIntermedio {
                 generarSentencias(nodo.hijos);
                 break;
             case PRINCIPAL:
-                instrucciones.add("func principal()");
-                generarSentencia(nodo.hijos.get(0));
-                instrucciones.add("endfunc principal");
+                String funcionAnterior = funcionActual;
+                funcionActual = "principal";
+                try {
+                    instrucciones.add("func#begin#principal#void");
+                    generarSentencia(nodo.hijos.get(0));
+                    instrucciones.add("func#end#principal#void");
+                } finally {
+                    funcionActual = funcionAnterior;
+                }
                 break;
             case FUNCION:
                 generarFuncion(nodo);
@@ -71,13 +83,12 @@ public final class GeneradorCodigoIntermedio {
                 instrucciones.add("goto " + salidasCiclos.element());
                 break;
             case DECLARACION:
-                String nombre = nodo.hijos.get(1).texto;
-                if (nodo.hijos.size() == 2) {
-                    String tipo = nodo.hijos.get(0).texto;
-                    instrucciones.add("var " + tipo + " " + declararNombre(nombre));
-                } else {
+                String tipo = nodo.hijos.get(0).texto;
+                String nombre = declararNombre(nodo.hijos.get(1).texto);
+                instrucciones.add("data#" + nombre + "#" + tipo);
+                if (nodo.hijos.size() == 3) {
                     String valor = generarExpresion(nodo.hijos.get(2));
-                    instrucciones.add(declararNombre(nombre) + " = " + valor);
+                    instrucciones.add(nombre + " = " + valor);
                 }
                 break;
             case DECLARACION_ARREGLO:
@@ -112,18 +123,25 @@ public final class GeneradorCodigoIntermedio {
 
     private void generarFuncion(Nodo nodo) {
         String nombre = nodo.hijos.get(1).texto;
-        List<String> parametros = new ArrayList<>();
+        String tipoRetorno = nodo.hijos.get(0).texto;
+        List<String> declaracionesParametros = new ArrayList<>();
+        String funcionAnterior = funcionActual;
+        funcionActual = nombre;
 
         scopes.push(new HashMap<>());
         try {
             for (Nodo parametro : nodo.hijos.get(2).hijos) {
-                parametros.add(declararNombre(parametro.hijos.get(1).texto));
+                String tipo = parametro.hijos.get(0).texto;
+                String nombreParametro = declararNombre(parametro.hijos.get(1).texto);
+                declaracionesParametros.add("param#" + nombreParametro + "#" + tipo + " " + nombreParametro);
             }
 
-            instrucciones.add("func " + nombre + "(" + String.join(", ", parametros) + ")");
+            instrucciones.add("func#begin#" + nombre + "#" + tipoRetorno);
+            instrucciones.addAll(declaracionesParametros);
             generarSentencias(nodo.hijos.get(3).hijos);
-            instrucciones.add("endfunc " + nombre);
+            instrucciones.add("func#end#" + nombre + "#" + tipoRetorno);
         } finally {
+            funcionActual = funcionAnterior;
             scopes.pop();
         }
     }
@@ -131,8 +149,14 @@ public final class GeneradorCodigoIntermedio {
     private String generarLlamada(Nodo nodo) {
         String nombre = nodo.hijos.get(0).texto;
         List<String> argumentos = generarValores(nodo.hijos.subList(1, nodo.hijos.size()));
-        for (String argumento : argumentos) {
-            instrucciones.add("param " + argumento);
+        List<Nodo> parametros = funciones.get(nombre).hijos.get(2).hijos;
+        for (int i = 0; i < argumentos.size(); i++) {
+            String argumento = argumentos.get(i);
+            String tipo = parametros.get(i).hijos.get(0).texto;
+            Nodo expresion = nodo.hijos.get(i + 1);
+            String nombreArgumento = expresion.clase == Nodo.Clase.IDENTIFICADOR
+                    ? buscarNombre(expresion.texto) : argumento;
+            instrucciones.add("param#" + nombreArgumento + "#" + tipo + " " + argumento);
         }
         return "call " + nombre + ", " + argumentos.size();
     }
@@ -140,11 +164,11 @@ public final class GeneradorCodigoIntermedio {
     private void generarDeclaracionArreglo(Nodo nodo) {
         String tipo = nodo.hijos.get(0).texto;
         String capacidad = nodo.hijos.get(2).hijos.get(0).texto;
-        List<String> valores = generarValores(nodo.hijos.get(3).hijos);
         String nombre = declararNombre(nodo.hijos.get(1).texto);
 
         capacidadesArreglos.put(nombre, capacidad);
-        instrucciones.add("array " + tipo + " " + nombre + ", " + capacidad);
+        instrucciones.add("data#" + nombre + "#" + tipo + "[" + capacidad + "]");
+        List<String> valores = generarValores(nodo.hijos.get(3).hijos);
         escribirElementos(nombre, valores);
     }
 
@@ -256,8 +280,15 @@ public final class GeneradorCodigoIntermedio {
     }
 
     private void generarFor(Nodo nodo) {
+        String prefijo = funcionActual + "_for_" + ++contadorFor;
+        String inicioFor = prefijo + "_init";
+        String condicionFor = prefijo + "_cond";
+        String incrementoFor = prefijo + "_inc";
+        String bloqueFor = prefijo + "_bloque";
+        String salidaFor = prefijo + "_end";
         scopes.push(new HashMap<>());
         try {
+            instrucciones.add(inicioFor + ":");
             Nodo inicializacion = nodo.hijos.get(0);
             if (inicializacion.clase == Nodo.Clase.IDENTIFICADOR) {
                 generarExpresion(inicializacion);
@@ -265,12 +296,16 @@ public final class GeneradorCodigoIntermedio {
                 generarSentencia(inicializacion);
             }
 
-            String inicioFor = nuevaEtiquetaInicioFor();
-            String salidaFor = nuevaEtiquetaSalidaFor();
-            instrucciones.add(inicioFor + ":");
+            instrucciones.add(condicionFor + ":");
             String condicion = generarExpresion(nodo.hijos.get(1));
-            instrucciones.add("ifFalse " + condicion + " goto " + salidaFor);
+            instrucciones.add("if " + condicion + " goto " + bloqueFor);
+            instrucciones.add("goto " + salidaFor);
 
+            instrucciones.add(incrementoFor + ":");
+            generarExpresion(nodo.hijos.get(2));
+            instrucciones.add("goto " + condicionFor);
+
+            instrucciones.add(bloqueFor + ":");
             salidasCiclos.push(salidaFor);
             try {
                 generarSentencias(nodo.hijos.get(3).hijos);
@@ -278,8 +313,7 @@ public final class GeneradorCodigoIntermedio {
                 salidasCiclos.pop();
             }
 
-            generarExpresion(nodo.hijos.get(2));
-            instrucciones.add("goto " + inicioFor);
+            instrucciones.add("goto " + incrementoFor);
             instrucciones.add(salidaFor + ":");
         } finally {
             scopes.pop();
@@ -296,14 +330,6 @@ public final class GeneradorCodigoIntermedio {
 
     private String nuevaEtiquetaSalidaWhile() {
         return "salidaWhile" + ++contadorSalidaWhile;
-    }
-
-    private String nuevaEtiquetaInicioFor() {
-        return "inicioFor" + ++contadorInicioFor;
-    }
-
-    private String nuevaEtiquetaSalidaFor() {
-        return "salidaFor" + ++contadorSalidaFor;
     }
 
     private void generarSentencias(List<Nodo> sentencias) {

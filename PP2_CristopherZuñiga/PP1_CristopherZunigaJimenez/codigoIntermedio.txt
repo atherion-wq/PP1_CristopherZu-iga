@@ -1,118 +1,190 @@
-array int datos, 4
-datos[0] = 2
-datos[1] = 4
-datos[2] = 6
-datos[3] = 8
-base = 2
-func ajustar(valor)
-t1 = valor >= 6
-ifFalse t1 goto L2
-t2 = valor + base
-return t2
-goto L1
-L2:
-t3 = valor == 4
-ifFalse t3 goto L3
-t4 = valor pot 2
-return t4
-goto L1
-L3:
-t5 = valor mod 3
-return t5
+data#numero#int
+data#g#int
+data#ff#float
+func#begin#func1#float
+param#x22#char x22
+param#x23#char x23
+data#sss#string
+sss = "Hola"
+t1 = 20 + 21
+numero = t1
+data#letra#char
+letra = 'a'
+data#h#float
+t2 = numero
+numero = t2 + 1
+t3 = 10 + 24
+t4 = t2 * t3
+t5 = 44 pot 88
+t6 = t4 // t5
+t7 = numero
+numero = t7 - 1
+t8 = t6 mod t7
+g = t8
+t9 = letra
+param#letra#char t9
+param#'b'#char 'b'
+t10 = call func1, 2
+t11 = 4.4 * t10
+t12 = 9.9 - 6.7
+t13 = t11 / t12
+h = t13
+write numero
+ff = -0.01
+data#_miChar_#char
+_miChar_ = '!'
+data#_x30_#int
+_x30_ = -1
+data#_x40_#bool
+_x40_ = false
+data#_x50_#int[2]
+_x50_[0] = 4
+_x50_[1] = 5
+t14 = 1 + 0
+if t14 < 0 goto L1
+if t14 >= 2 goto L1
+goto L2
 L1:
-endfunc ajustar
-func promedio(suma, cantidad)
-t6 = suma / cantidad
-return t6
-endfunc promedio
-func principal()
-var int limite
-read limite
-total = 0
-procesados = 0
-i = 0
-inicioFor1:
-t7 = i < 4
-ifFalse t7 goto salidaFor1
-inicioWhile1:
-if i < 0 goto L4
-if i >= 4 goto L4
-goto L5
+halt
+L2:
+_x50_[t14] = -9999
+data#_x502_#float[4]
+_x502_[0] = 5.5
+_x502_[1] = 6.4
+_x502_[2] = 7.7
+_x502_[3] = 8.8
+write "1****"
+t15 = _x30_ - 2
+if t15 < 0 goto L3
+if t15 >= 4 goto L3
+goto L4
+L3:
+halt
 L4:
-halt
-L5:
-t8 = datos[i]
-t9 = t8 > limite
-ifFalse t9 goto salidaWhile1
-t10 = i
-if t10 < 0 goto L6
-if t10 >= 4 goto L6
-goto L7
-L6:
-halt
+t16 = _x502_[t15]
+t17 = letra
+param#letra#char t17
+param#'c'#char 'c'
+t18 = call func1, 2
+t19 = t16 * t18
+ff = t19
+data#_x503_#string
+_x503_ = "Hola a todos los que estʃ:a:ʅ haciendo un compilador nuevo¿:n"
+write _x503_
+t20 = numero <= 45
+t21 = ff > 5.6
+t22 = t20 λ t21
+ifFalse t22 goto L6
+data#y1#int
+write "2****"
+t23 = ff > 5.6
+t24 = numero > 45
+t25 = t23 θ t24
+t26 = Σ t25
+ifFalse t26 goto L7
+data#y#int
+data#ch33#char
+ch33 = 'a'
+write "22****22"
 L7:
-if i < 0 goto L8
-if i >= 4 goto L8
-goto L9
-L8:
-halt
-L9:
-t11 = datos[i]
-t12 = t11 - 1
-datos[t10] = t12
-goto salidaWhile1
+write "2****"
+data#ch33.2#char
+ch33.2 = 'a'
+goto L5
+L6:
+t27 = 44.55 < ff
+ifFalse t27 goto L8
+write "3****"
+data#y2#int
+y2 = 45
+data#str2#string
+str2 = "dddfffddd"
+inicioWhile1:
+t28 = false λ _x40_
+ifFalse t28 goto salidaWhile1
+write _x503_
+write "4!!!!!!!!!!!!!!!!!"
+func1_for_1_init:
+data#numSS#int
+numSS = 0
+func1_for_1_cond:
+t29 = numSS < 7
+if t29 goto func1_for_1_bloque
+goto func1_for_1_end
+func1_for_1_inc:
+t30 = numSS
+numSS = t30 + 1
+goto func1_for_1_cond
+func1_for_1_bloque:
+write numSS
+goto func1_for_1_inc
+func1_for_1_end:
+write "4!!!!!!!!!!!!!!!!!"
 goto inicioWhile1
 salidaWhile1:
-t13 = i
-if t13 < 0 goto L10
-if t13 >= 4 goto L10
-goto L11
+write "3****"
+goto L5
+L8:
+write "4****"
+L5:
+t31 = 444.555 < ff
+ifFalse t31 goto L10
+write "5****"
+goto L9
 L10:
-halt
+write "6****"
+L9:
+write "Hola mundo"
+t32 = -5.6 / ff
+t33 = letra
+param#letra#char t33
+param#'d'#char 'd'
+t34 = call func1, 2
+t35 = t32 * t34
+return t35
+func#end#func1#float
+func#begin#_func2_#int
+param#_b1_#float _b1_
+param#_i1_#int _i1_
+data#j#int
+return _i1_
+func#end#_func2_#int
+func#begin#_func3_#bool
+data#_b1_.2#string
+return true
+func#end#_func3_#bool
+func#begin#principal#void
+data#miChar#char
+miChar = '!'
+data#str1#string
+str1 = "Mi string 1"
+data#fl1#float
+fl1 = 56.6
+data#in1#int
+in1 = 10
+data#bl0#bool
+t36 = 6.7 != 8.9
+bl0 = t36
+data#_x50_.2#int[2]
+_x50_.2[0] = 4
+_x50_.2[1] = 5
+t37 = miChar
+param#miChar#char t37
+param#'e'#char 'e'
+t38 = call func1, 2
+t39 = t38 * 5.5
+if 0 < 0 goto L11
+if 0 >= 2 goto L11
+goto L12
 L11:
-if i < 0 goto L12
-if i >= 4 goto L12
-goto L13
+halt
 L12:
-halt
-L13:
-t14 = datos[i]
-param t14
-t15 = call ajustar, 1
-datos[t13] = t15
-if i < 0 goto L14
-if i >= 4 goto L14
-goto L15
-L14:
-halt
-L15:
-t16 = datos[i]
-t17 = total + t16
-total = t17
-t18 = procesados
-procesados = t18 + 1
-t19 = total > 20
-t20 = Σ false
-t21 = t19 λ t20
-ifFalse t21 goto L16
-goto salidaFor1
-L16:
-t22 = i
-i = t22 + 1
-goto inicioFor1
-salidaFor1:
-t23 = total
-param t23
-param procesados
-t24 = call promedio, 2
-media = t24
-param 4
-t25 = call ajustar, 1
-param t25
-param 2
-t26 = call promedio, 2
-muestra = t26
-write "Promedio"
-write media
-write muestra
-endfunc principal
+t40 = _x50_.2[0]
+t41 = in1 // t40
+param#t39#float t39
+param#t41#int t41
+t42 = call _func2_, 2
+t43 = 0 + t42
+t44 = t43 + 0
+in1 = t44
+func#end#principal#void
